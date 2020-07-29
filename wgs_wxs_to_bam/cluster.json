@@ -1,0 +1,150 @@
+{
+    "__default__":
+    {
+        "account": "pkus",
+        "mem": "10G",
+        "time": "2:0:0",
+		"cpus": 20,
+        "output": "outputs/slurm_%A.txt",
+        "partition": "extuser"
+    },
+    "sra_to_fastq":
+    {
+		"job_name": "fasterq-dump",
+		"cpus": 6,
+		"partition": "ibm_large",
+		"mem": "30G",
+        "output": "outputs/sra_to_fastq_%A.txt"
+    },
+    "fastqc_1":
+    {
+		"job_name": "fastqc_1",
+		"cpus": 20,
+		"partition": "phi",
+		"mem": "30G",
+        "output": "outputs/fastqc_1_%A.txt"
+    },
+    "multiqc_1":
+    {
+        "job_name": "multiqc_1",
+		"cpus": 15,
+		"partition": "extuser",
+		"mem": "25G",
+        "output": "outputs/multiqc_1_%A.txt"
+    },
+    "trimming":
+    {
+        "job_name": "trimming",
+		"cpus": 10,
+		"partition": "phi",
+		"mem": "30G",
+        "output": "outputs/trimming_1_%A.txt"
+    },
+    "fastqc_2":
+    {
+		"job_name": "fastqc_2",
+		"cpus": 20,
+		"partition": "ibm_large",
+		"mem": "30G",
+        "output": "outputs/fastqc_2_%A.txt"
+    },
+    "multiqc_2":
+    {
+        "job_name": "multiqc_2",
+		"cpus": 15,
+		"partition": "extuser",
+		"mem": "25G",
+        "output": "outputs/multiqc_2_%A.txt"
+    },
+    "bwa_mem":
+    {
+        "job_name": "bwa_mem",
+		"cpus": 12,
+		"partition": "phi",
+		"mem": "80G",
+        "output": "outputs/bwa_mem_%A.txt"
+    },
+    "sort_sam":
+    {
+        "job_name": "sort_sam",
+		"cpus": 10,
+		"partition": "phi",
+		"mem": "80G",
+        "output": "outputs/sort_sam_%A.txt"
+    },
+    "mark_duplicates":
+    {
+        "job_name": "mark_duplicates",
+		"cpus": 3,
+		"partition": "ibm_large",
+		"mem": "30G",
+        "output": "outputs/mark_duplicates_%A.txt"
+    },
+    "set_tags":
+    {
+        "job_name": "set_tags",
+		"cpus": 6,
+		"partition": "phi",
+		"mem": "30G",
+        "output": "outputs/set_tags_%A.txt"
+    },
+    "base_recalibrator":
+    {
+        "job_name": "base_recalibrator",
+		"cpus": 6,
+		"partition": "phi",
+		"mem": "30G",
+        "output": "outputs/base_recalibrator_%A.txt"
+    },
+    "apply_bsqr":
+    {
+        "job_name": "apply_bsqr",
+		"cpus": 6,
+		"partition": "phi",
+		"mem": "30G",
+        "output": "outputs/mark_duplicates_%A.txt"
+    },
+    "bam_stat":
+    {
+        "job_name": "flagstat",
+		"cpus": 20,
+		"partition": "phi",
+		"mem": "10G",
+        "output": "outputs/flagstat_%A.txt"
+    },
+    "gather_bam_stats":
+    {
+        "job_name": "multiqc",
+		"cpus": 6,
+		"partition": "phi",
+		"mem": "30G",
+        "output": "outputs/multiqc_flagstat_%A.txt"
+    },
+    "panel_of_normals_1":
+    {
+        "time": "12:0:0",
+        "job_name": "pon1",
+		"cpus": 1,
+		"partition": "phi",
+		"mem": "4G",
+        "output": "outputs/pon1_%A.txt"
+    },
+    "merge_pon_vafs":
+    {
+        "time": "12:0:0",
+        "job_name": "merge_vcf",
+		"cpus": 5,
+		"partition": "phi",
+		"mem": "30G",
+        "output": "outputs/merge_pon_vafs_%A.txt"
+    },
+    "create_genomics_db":
+    {
+        "time": "12:0:0",
+        "job_name": "create_genomics_db",
+		"cpus": 5,
+		"partition": "phi",
+		"mem": "30G",
+        "output": "outputs/create_genomics_db_%A.txt"
+    }
+}

@@ -1,0 +1,102 @@
+{
+    "__default__":
+    {
+        "account": "pkus",
+        "job_name": "snake_job",
+        "mem": "10G",
+        "time": "2:0:0",
+		"cpus": 20,
+        "output": "outputs/slurm_%A.txt",
+        "partition": "extuser"
+    },
+    "mutect2":
+    {
+        "time": "200:0:0",
+        "job_name": "mutect2",
+		"cpus": 10,
+		"partition": "phi",
+		"mem": "80G",
+        "output": "outputs/mutect2_%A.txt"
+    },
+    "merge_vcf":
+    {
+        "time": "12:0:0",
+        "job_name": "merge_vcf",
+		"cpus": 6,
+		"partition": "ibm_large",
+		"mem": "17G",
+        "output": "outputs/merge_vcf_%A.txt"
+    },
+    "merge_mutect_stats":
+    {
+        "time": "12:0:0",
+        "job_name": "merge_mutect_stats",
+		"cpus": 6,
+		"partition": "ibm_large",
+		"mem": "17G",
+        "output": "outputs/merge_mutect_stats_%A.txt"
+    },
+    "get_pileup_summaries":
+    {
+        "time": "200:0:0",
+        "job_name": "pileup",
+		"cpus": 2,
+		"partition": "phi",
+		"mem": "10G",
+        "output": "outputs/pileup_%A.txt"
+    },
+    "gather_pileups":
+    {
+        "time": "200:0:0",
+        "job_name": "gpileup",
+		"cpus": 6,
+		"partition": "ibm_large",
+		"mem": "17G",
+        "output": "outputs/gpileup_%A.txt"
+    },
+    "calc_contamination":
+    {
+        "time": "200:0:0",
+        "job_name": "calc_cont",
+		"cpus": 6,
+		"partition": "ibm_large",
+		"mem": "17G",
+        "output": "outputs/calc_cont_%A.txt"
+    },
+    "learn_orientation":
+    {
+        "time": "12:0:0",
+        "job_name": "learn_orientation",
+		"cpus": 5,
+		"partition": "phi",
+		"mem": "20G",
+        "output": "outputs/learn_orientation_%A.txt"
+    },
+    "filter_calls":
+    {
+        "time": "12:0:0",
+        "job_name": "filter_calls",
+		"cpus": 1,
+		"partition": "phi",
+		"mem": "20G",
+        "output": "outputs/filter_calls_%A.txt"
+    },
+    "funcotator":
+    {
+        "time": "12:0:0",
+        "job_name": "funcotator",
+		"cpus": 4,
+		"partition": "phi",
+		"mem": "20G",
+        "output": "outputs/funcotator_%A.txt"
+    },
+    "vep":
+    {
+        "time": "12:0:0",
+        "job_name": "vep",
+		"cpus": 4,
+		"partition": "phi",
+		"mem": "20G",
+        "output": "outputs/vep_%A.txt"
+    }
+}
