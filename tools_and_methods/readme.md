@@ -1,3 +1,8 @@
+# Tools
+
+* "fish plot": [TimeScape](http://bioconductor.org/packages/release/bioc/html/timescape.html)
+* clonality interence: [PyClone](https://bitbucket.org/aroth85/pyclone/wiki/Home) + [CITUP](https://github.com/amcpherson/citup)
+
 # Notes from articles
 
 ## Single-cell DNA sequencing reveals a latedissemination model in metastatic colorectal cancer, M.L. Leung et al. (2017)
