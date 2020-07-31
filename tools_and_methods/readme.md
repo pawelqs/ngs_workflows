@@ -1,7 +1,29 @@
 # Tools
 
 * "fish plot": [TimeScape](http://bioconductor.org/packages/release/bioc/html/timescape.html)
-* clonality interence: [PyClone](https://bitbucket.org/aroth85/pyclone/wiki/Home) + [CITUP](https://github.com/amcpherson/citup)
+* clonality inference: [PyClone](https://bitbucket.org/aroth85/pyclone/wiki/Home) + [CITUP](https://github.com/amcpherson/citup)
+* clonality inference: PhyloWGS, DPClust, CliP?
+
+## single cell CNV analysis:
+
+* pipeline: [Genome-wide copy number analysis of single cells (2012)](https://www.nature.com/articles/nprot.2012.039) and
+[Optimizing sparse sequencing of single cells for highly multiplex copy number profiling (2015)](https://genome.cshlp.org/content/25/5/714)
+* DNAcopy: used for circular binary segmentation of CNV bins, then `MergeLevels` can be used to join similar segments [1]
+* dbscan used to filter noise [1]
+* 'cluster' package: to find optimal number of clusters [1]
+* hierarchical clustering: R `stats::hclust()` [1] (ward.D2 method)
+* measure internal cluster consistency using Pearson and Spearman correlations
+
+## Mutations analysis:
+
+* 2-dimensional clustering: MDS, r function `cmdscale(x, eig = TRUE, k = 2)` where x is a matrix with cells in the columns and mutations in the rows
+
+## comparison of phylogenetic trees:
+
+* Tanglegrams, `dendextend` R package
+
+
+1. [Multiclonal Invasion in Breast Tumors Identified by Topographic Single Cell Sequencing, Navin 2018](https://www.sciencedirect.com/science/article/pii/S0092867417314496)
 
 # Notes from articles
 
