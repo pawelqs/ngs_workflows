@@ -1,0 +1,115 @@
+{
+    "__default__":
+    {
+        "account": "pkus",
+        "mem": "10G",
+        "time": "200:0:0",
+		"cpus": 20,
+        "output": "outputs/slurm_%A.txt",
+        "partition": "extuser"
+    },
+    "sra_to_fastq":
+    {
+		"job_name": "fasterq-dump",
+		"cpus": 6,
+		"partition": "ibm_large",
+		"mem": "30G",
+        "output": "outputs/sra_to_fastq_%A.txt"
+    },
+    "fastqc_1":
+    {
+		"job_name": "fastqc_1",
+		"cpus": 20,
+		"partition": "ibm_small",
+		"mem": "28G",
+        "output": "outputs/fastqc_1_%A.txt"
+    },
+    "multiqc_1":
+    {
+        "job_name": "multiqc_1",
+		"cpus": 15,
+		"partition": "extuser",
+		"mem": "25G",
+        "output": "outputs/multiqc_1_%A.txt"
+    },
+    "trimming":
+    {
+        "job_name": "trimming",
+		"cpus": 10,
+		"partition": "ibm_small",
+		"mem": "28G",
+        "output": "outputs/trimming_1_%A.txt"
+    },
+    "fastqc_2":
+    {
+		"job_name": "fastqc_2",
+		"cpus": 20,
+		"partition": "ibm_large",
+		"mem": "30G",
+        "output": "outputs/fastqc_2_%A.txt"
+    },
+    "multiqc_2":
+    {
+        "job_name": "multiqc_2",
+		"cpus": 15,
+		"partition": "extuser",
+		"mem": "25G",
+        "output": "outputs/multiqc_2_%A.txt"
+    },
+    "bwa_mem":
+    {
+        "job_name": "bwa_mem",
+		"cpus": 12,
+		"partition": "phi",
+		"mem": "80G",
+        "output": "outputs/bwa_mem_%A.txt"
+    },
+    "sort_sam":
+    {
+        "job_name": "sort_sam",
+		"cpus": 12,
+		"partition": "phi",
+		"mem": "80G",
+        "output": "outputs/sort_sam_%A.txt"
+    },
+    "qc3":
+    {
+        "job_name": "qc3",
+		"cpus": 20,
+		"partition": "ibm_large",
+		"mem": "10G",
+        "output": "outputs/flagstat_%A.txt"
+    },
+    "multiqc_3":
+    {
+        "job_name": "multiqc",
+		"cpus": 6,
+		"partition": "extuser",
+		"mem": "28G",
+        "output": "outputs/multiqc_flagstat_%A.txt"
+    },
+    "mark_duplicates":
+    {
+        "job_name": "mark_duplicates",
+		"cpus": 4,
+		"partition": "phi",
+		"mem": "30G",
+        "output": "outputs/mark_duplicates_%A.txt"
+    },
+    "base_recalibrator":
+    {
+        "job_name": "base_recalibrator",
+		"cpus": 8,
+		"partition": "ibm_large",
+		"mem": "30G",
+        "output": "outputs/base_recalibrator_%A.txt"
+    },
+    "apply_bsqr":
+    {
+        "job_name": "apply_bsqr",
+		"cpus": 6,
+		"partition": "phi",
+		"mem": "30G",
+        "output": "outputs/mark_duplicates_%A.txt"
+    }
+}
