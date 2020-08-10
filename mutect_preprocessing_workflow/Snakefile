@@ -1,68 +1,29 @@
 import pandas as pd
 
-SRR = glob_wildcards('sra/{srr}.sra').srr
+os.makedirs("outputs", exist_ok=True)
 
-samples = pd.read_csv("SraRunTable.txt")
-samples["type_short"] = (
-    samples.sample_type
-    .str.replace("Single leucocyte", "luekocyte")
-    .str.replace("Circulating tumor cell", "CTC")
-    .str.replace("Bulk blood gDNA", "bulk")
-    .str.replace("Primary tissue", "primary")
-    .str.replace("Liver metastatic tissue", "metastasis")
-    .str.replace("\(befor chemoterapy\)", "bch")
-    .str.replace("\(befor chemoterapy\)", "bch")
-    .str.replace("\(during first-line chemoterapy\)", "1ch")
-    .str.replace("\(during second-line chemoterapy\)", "2ch")
-    .str.replace(" ", "_")
-)
-samples["patient"] = samples.patient_id.str.replace("Patient", "P")
-samples["lib_type"] = samples.Seqence_Type.str.replace("Exome", "WES")
-samples["sample_name"] = samples.patient + "_" + samples.type_short + "_" + samples.lib_type
+samples = pd.read_csv("bam_processing_pipeline_table.tsv", delimiter='\t')
+patients = samples.patient.unique().tolist()
+qc_report_groups = samples.qc_report_group.unique().tolist()
+patients = ["P2"]
+sample_name_to_srr = pd.Series(samples.SRR.values, index=samples.sample_name).to_dict()
 
-sample_name_to_srr = pd.Series(samples.Run.values, index=samples.sample_name).to_dict()
-
-if not samples.sample_name.is_unique:
-    print("Exiting because sample names are not unique!")
-    exit()
-
-normal_wxs_libraries = (samples
-    [["Run", "Assay Type", "sample_type"]]
-    .query("sample_type in ['Single leucocyte', 'Bulk blood gDNA'] and `Assay Type` == 'WXS'")
-    .assign(
-        s_type=lambda x: x.sample_type.map({"Bulk blood gDNA": "bulk", "Single leucocyte": "leucocyte"}),
-        srr_type=lambda x: x.Run + "." + x.s_type,
-        pon_vcf=lambda x: "PoN/normal_vcfs/" + x.Run + "." + x.s_type + ".vcf.gz"
-    )
-)
-
-mutect_intervals=["%04d" % i for i in range(0, 20)]
-lucocyte_srr=normal_wxs_libraries.query("s_type == 'leucocyte'").Run
-bulk_srr=normal_wxs_libraries.query("s_type == 'bulk'").Run
 
 rule all:
     input:
-#        expand("fastq/{srr}_{n}.fastq", srr=SRR, n=[1, 2])
-#        expand("PoN/{type}.pon.vcf.gz", type=["bulk", "leucocyte"])
-#        expand("PoN/normal_vcfs/{srr_type}.vcf.gz", srr_type=normal_wxs_libraries.srr_type)
-#        expand("PoN/scattered_normal_vcfs/{srr_type}.{interval}.vcf.gz", srr_type=normal_wxs_libraries.srr_type, interval=mutect_intervals)
         expand("bams/{sample}.final.bam", sample=samples.sample_name),
-#        expand("base_recalibrator_data/{srr}.recal_data.table", srr=SRR)
-#        expand("bams/{sample}.sorted.duplicates_marked.tagged.bam", sample=samples.sample_name),
-#        expand("bams/{sample}.sorted.duplicates_marked.bam", sample=samples.sample_name),
-#        expand("sams/{sample}.sam", sample=samples.sample_name)
-        "qc/bam_stats_multiqc/multiqc_report.html",
-        "qc/trimmed_multiqc/multiqc_report.html",
-#        expand("trimmed_fastq/{sample}_{n}_val_{n}.fq", sample=samples.sample_name, n=[1, 2]),
-        "qc/multiqc/multiqc_report.html"
-#        expand("qc/fastqc/{sample}_{n}_fastqc.{ext}", sample=samples.sample_name, n=[1, 2], ext=["html", "zip"])
-#        expand("fastq/{sample}_{n}.fastq", sample=samples.sample_name, n=[1, 2])
+        "qc/fastq.multiqc_report.html",
+        "qc/trimmed.multiqc_report.html",
+        "qc/bam.multiqc_report.html"
+
+####################################################
+########### Format conversion
+####################################################
 
 def get_sra_file(name):
     srr = sample_name_to_srr[name]
     return("sra/%s.sra" % srr)
 
-# Alignment
 rule sra_to_fastq:
     input: lambda wildcards: get_sra_file(wildcards.sample)
     output: temp(["fastq/{sample}_1.fastq", "fastq/{sample}_2.fastq"])
@@ -76,49 +37,63 @@ rule sra_to_fastq:
         mv fastq/{params.srr}.sra_2.fastq fastq/{wildcards.sample}_2.fastq
         """
 
+####################################################
+########### Quality Control
+####################################################
+
 rule fastqc_1:
     input: "fastq/{sample}_{n}.fastq"
-    output: ["qc/fastqc/{sample}_{n}_fastqc.html", "qc/fastqc/{sample}_{n}_fastqc.zip"]
+    output: ["qc/fastq/{sample}_{n}_fastqc.html", "qc/fastq/{sample}_{n}_fastqc.zip"]
     threads: 20
-    shell: "~/programs/FastQC/fastqc -o fastqc -t 20 {input}"
+    shell: "~/programs/FastQC/fastqc -o qc/fastq -t 20 {input}"
 
 rule multiqc_1:
-    input: expand("qc/fastqc/{sample}_{n}_fastqc.{ext}", sample=samples.sample_name, n=[1, 2], ext=["html", "zip"])
-    output: "qc/multiqc/multiqc_report.html"
+    input: expand("qc/fastq/{sample}_{n}_fastqc.{ext}", sample=samples.sample_name, n=[1, 2], ext=["html", "zip"])
+    output: "qc/fastq.multiqc_report.html"
+    params:
+        dir = "qc/fastq_multiqc"
     shell:
         """
-        mkdir -p qc/multiqc
-        rm -rf qc/multiqc/*
-        multiqc -o qc/multiqc fastqc
+        mkdir -p {params.dir}
+        rm -rf {params.dir}/*
+        multiqc -o {params.dir} qc/fastq
+        cp {params.dir}/multiqc_report.html {output}
         """
 
 rule trimming:
     input: ["fastq/{sample}_1.fastq", "fastq/{sample}_2.fastq"]
-    output: ["trimmed_fastq/{sample}_1_val_1.fq", "trimmed_fastq/{sample}_2_val_2.fq"]
+    output: temp(["fastq/trimmed/{sample}_1_val_1.fq", "fastq/trimmed/{sample}_2_val_2.fq"])
     shell:
         """
-        trim_galore --paired -o trimmed_fastq {input}
+        trim_galore --paired -o fastq/trimmed {input}
         """
 
 rule fastqc_2:
-    input: "trimmed_fastq/{sample}_{n}_val_{n}.fq"
-    output: ["qc/trimmed_fastqc/{sample}_{n}_val_{n}_fastqc.html", "qc/trimmed_fastqc/{sample}_{n}_val_{n}_fastqc.zip"]
+    input: "fastq/trimmed/{sample}_{n}_val_{n}.fq"
+    output: ["qc/trimmed/{sample}_{n}_val_{n}_fastqc.html", "qc/trimmed/{sample}_{n}_val_{n}_fastqc.zip"]
     threads: 20
-    shell: "~/programs/FastQC/fastqc -o trimmed_fastqc -t 20 {input}"
+    shell: "~/programs/FastQC/fastqc -o qc/trimmed -t 20 {input}"
 
 rule multiqc_2:
-    input: expand("qc/trimmed_fastqc/{sample}_{n}_val_{n}_fastqc.{ext}", sample=samples.sample_name, n=[1, 2], ext=["html", "zip"])
-    output: "qc/trimmed_multiqc/multiqc_report.html"
+    input: expand("qc/trimmed/{sample}_{n}_val_{n}_fastqc.{ext}", sample=samples.sample_name, n=[1, 2], ext=["html", "zip"])
+    output: "qc/trimmed.multiqc_report.html"
+    params:
+        dir = "qc/trimmed_multiqc"
     shell:
         """
-        mkdir -p qc/trimmed_multiqc
-        rm -rf qc/trimmed_multiqc/*
-        multiqc -o qc/trimmed_multiqc trimmed_fastqc
+        mkdir -p {params.dir}
+        rm -rf {params.dir}/*
+        multiqc -o {params.dir} qc/trimmed
+        cp {params.dir}/multiqc_report.html {output}
         """
 
+####################################################
+########### Alignment and quality control
+####################################################
+
 rule bwa_mem:
-    input: ["trimmed_fastq/{sample}_1_val_1.fq", "trimmed_fastq/{sample}_2_val_2.fq"]
-    output: temp("sams/{sample}.sam")
+    input: ["fastq/trimmed/{sample}_1_val_1.fq", "fastq/trimmed/{sample}_2_val_2.fq"]
+    output: temp("bams/{sample}.sam")
     threads: 12
     params:
         r = lambda wildcards: "@RG\\tID:%s\\tPL:ILLUMINA\\tSM:{%s}\\tLB:{%s}" % (wildcards.sample, wildcards.sample, wildcards.sample)
@@ -132,7 +107,7 @@ rule bwa_mem:
         """
 
 rule sort_sam:
-    input: "sams/{sample}.sam"
+    input: "bams/{sample}.sam"
     output: temp("bams/{sample}.sorted.bam")
     threads: 10
     shell:
@@ -141,11 +116,40 @@ rule sort_sam:
         samtools quickcheck {output}
         """
 
+rule qc3:
+    input: "bams/{sample}.sorted.bam"
+    output:
+        flagstat = "qc/bam/{sample}.sorted_flagstat",
+        fastqc = ["qc/bam/{sample}.sorted_fastqc.html", "qc/bam/{sample}.sorted_fastqc.zip"]
+    threads: 20
+    shell:
+        """
+        samtools flagstat {input} > {output.flagstat}
+        ~/programs/FastQC/fastqc -o qc/bam -t 20 {input}
+        """
+
+rule multiqc_3:
+    input: expand("qc/bam/{sample}.sorted_{file}", sample=samples.sample_name, file=["flagstat", "fastqc.html", "fastqc.zip"])
+    output: "qc/bam.multiqc_report.html"
+    params:
+        dir = "qc/bam_multiqc"
+    shell:
+        """
+        mkdir -p {params.dir}
+        rm -rf {params.dir}/*
+        multiqc -o {params.dir} qc/bam
+        cp {params.dir}/multiqc_report.html {output}
+        """
+
+####################################################
+########### Mark duplicates
+####################################################
+
 rule mark_duplicates:
     input: "bams/{sample}.sorted.bam"
     output:
         bam=temp("bams/{sample}.sorted.duplicates_marked.bam"),
-        metric="mark_duplicates_metrics/{sample}.metrics"
+        metric="temp/mark_duplicates_metrics/{sample}.metrics"
     shell:
         """
         ~/programs/gatk-4.1.8.0/gatk MarkDuplicates -I {input} -O {output.bam} -M {output.metric}
@@ -153,8 +157,8 @@ rule mark_duplicates:
         """
 
 #rule mark_duplicates:
-#    input: "sams/{srr}.sam"
-#    output: "bams/{srr}.sorted.duplicates_marked.bam"
+#    input: "bams/{sample}.sorted.bam" #sam
+#    output: "bams/{sample}.sorted.duplicates_marked.bam"
 #    threads: 20
 #    shell:
 #        """
@@ -162,19 +166,21 @@ rule mark_duplicates:
 #        samtools quickcheck {output}
 #        """
 
-rule set_tags:
-    input: "bams/{sample}.sorted.duplicates_marked.bam"
-    output: temp("bams/{sample}.sorted.duplicates_marked.tagged.bam")
-    threads: 6
-    shell:
-        """
-        ~/programs/gatk-4.1.8.0/gatk SetNmMdAndUqTags -I {input} -R ~/resources/hg38_for_bwa/hs38DH.fa -O {output}
-        samtools quickcheck {output}
-        """
+#rule set_tags:
+#    required if MarkDuplicatesSpark is used, not necessary now.
+#    input: "bams/{sample}.sorted.duplicates_marked.bam"
+#    output: temp("bams/{sample}.sorted.duplicates_marked.tagged.bam")
+#    threads: 6
+#    shell:
+#        """
+#        ~/programs/gatk-4.1.8.0/gatk SetNmMdAndUqTags -I {input} -R ~/resources/hg38_for_bwa/hs38DH.fa -O {output}
+#        samtools quickcheck {output}
+#        """
+#
 
 rule base_recalibrator:
-    input: "bams/{sample}.sorted.duplicates_marked.tagged.bam"
-    output: "base_recalibrator_data/{sample}.recal_data.table"
+    input: "bams/{sample}.sorted.duplicates_marked.bam"
+    output: "temp/base_recalibrator_data/{sample}.recal_data.table"
     params:
         ref="~/resources/hg38_for_bwa/hs38DH.fa",
         vcf1="~/resources/gatk/Homo_sapiens_assembly38.known_indels.vcf",
@@ -188,10 +194,11 @@ rule base_recalibrator:
             --known-sites {params.vcf1} --known-sites {params.vcf2} \\
             -O {output}
         """
+
 rule apply_bsqr:
     input:
-        bam="bams/{sample}.sorted.duplicates_marked.tagged.bam",
-        recal_table="base_recalibrator_data/{sample}.recal_data.table"
+        bam="bams/{sample}.sorted.duplicates_marked.bam",
+        recal_table="temp/base_recalibrator_data/{sample}.recal_data.table"
     params:
         ref="~/resources/hg38_for_bwa/hs38DH.fa"
     output: "bams/{sample}.final.bam"
@@ -206,54 +213,3 @@ rule apply_bsqr:
         samtools quickcheck {output}
         """
 
-rule bam_stat:
-    input: "bams/{sample}.final.bam"
-    output: 
-        flagstat = "qc/bam_stats/{sample}.final.flagstat",
-        fastqc = ["qc/bam_stats/{sample}.final_fastqc.html", "qc/bam_stats/{sample}.final_fastqc.zip"]
-    threads: 20
-    shell: 
-        """
-        samtools flagstat {input} > {output.flagstat}
-        ~/programs/FastQC/fastqc -o qc/bam_stats -t 20 {input}
-        """
-
-rule gather_bam_stats:
-    input: expand("qc/bam_stats/{sample}.final{file}", sample=samples.sample_name, file=[".flagstat", "_fastqc.html", "_fastqc.zip"])
-    output: "qc/bam_stats_multiqc/multiqc_report.html"
-    shell:
-        """
-        mkdir -p qc/bam_stats_multiqc
-        rm -rf qc/bam_stats_multiqc/*
-        multiqc -o qc/bam_stats_multiqc qc/bam_stats
-        """
-
-# Panel of Normals
-#rule panel_of_normals_1:
-#    input: "bams/{srr}.final.bam"
-#    output: "PoN/scattered_normal_vcfs/{srr}.{type}.{interval}.vcf.gz"
-#    params:
-#        ref="~/resources/hg38_for_bwa/hs38DH.fa",
-#        interval="~/resources/gatk/scattered_intervals_20/{interval}-scattered.interval_list"
-#    shell: "~/programs/gatk-4.1.8.0/gatk Mutect2 -R {params.ref} -I {input} -L {params.interval} --tumor-sample {srr} --max-mnp-distance 0 -O {output} "
-
-#rule merge_pon_vafs:
-#    input: ["PoN/scattered_normal_vcfs/{srr_type}.%s.vcf.gz" % interval for interval in mutect_intervals]
-#    output: "PoN/normal_vcfs/{srr_type}.vcf.gz"
-#    params:
-#        vcfs=" ".join(["-I PoN/scattered_normal_vcfs/{srr_type}.%s.vcf.gz" % interval for interval in mutect_intervals])
-#    shell: "~/programs/gatk-4.1.8.0/gatk MergeVcfs {params.vcfs} -O {output}"
-
-#rule create_genomics_db:
-#    input: lambda wildcards: normal_wxs_libraries.query("s_type == '%s'" % wildcards.type).pon_vcf
-#    output: "PoN/{type}.pon.vcf.gz"
-#    params:
-#        ref = "~/resources/hg38_for_bwa/hs38DH.fa",
-#        intervals = "~/resources/gatk/wgs_calling_regions.hg38.interval_list",
-#        gen_path = "pon_db_{type}",
-#        vcfs = lambda wildcards, input: " ".join(["-V %s" % file for file in input])
-#    shell:
-#        """
-#        ~/programs/gatk-4.1.8.0/gatk GenomicsDBImport -R {params.ref} -L {params.intervals} --genomicsdb-workspace-path {params.gen_path} {params.vcfs}
-#        ~/programs/gatk-4.1.8.0/gatk CreateSomaticPanelOfNormals -R {params.ref} -V gendb://{params.gen_path} -O {output}
-#        """

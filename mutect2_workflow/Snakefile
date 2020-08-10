@@ -1,215 +1,233 @@
 import pandas as pd
+import os
 
 os.makedirs("outputs", exist_ok=True)
 
-samples = pd.read_csv("bam_processing_pipeline_table.tsv", delimiter='\t')
+samples = pd.read_csv("mutect_pipeline_table.tsv", delimiter='\t')
 patients = samples.patient.unique().tolist()
-qc_report_groups = samples.qc_report_group.unique().tolist()
-patients = ["P2"]
-sample_name_to_srr = pd.Series(samples.SRR.values, index=samples.sample_name).to_dict()
+patients = ["P1"]
 
+intervals = glob_wildcards('/home/pkus/resources/gatk/scattered_intervals_100/{interval}-scattered.interval_list').interval
+###################################################
+############ MAIN #################################
+###################################################
+
+localrules: all
 
 rule all:
     input:
-        expand("bams/{sample}.final.bam", sample=samples.sample_name),
-        "qc/fastq.multiqc_report.html",
-        "qc/trimmed.multiqc_report.html",
-        "qc/bam.multiqc_report.html"
+        expand("variants/{patient}.raw.vcf.gz", patient = patients),
+        expand("variants/{patient}.filtered.vcf.gz", patient = patients),
 
-####################################################
-########### Format conversion
-####################################################
 
-def get_sra_file(name):
-    srr = sample_name_to_srr[name]
-    return("sra/%s.sra" % srr)
+##############################
+############ Mutect2 part
+##############################
 
-rule sra_to_fastq:
-    input: lambda wildcards: get_sra_file(wildcards.sample)
-    output: temp(["fastq/{sample}_1.fastq", "fastq/{sample}_2.fastq"])
-    params:
-        srr=lambda wildcards: sample_name_to_srr[wildcards.sample]
-    threads: 6
-    shell:
-        """
-        ~/programs/sraToolkit/sratoolkit.2.10.7-centos_linux64/bin/fasterq-dump --outdir fastq --split-3 {input}
-        mv fastq/{params.srr}.sra_1.fastq fastq/{wildcards.sample}_1.fastq
-        mv fastq/{params.srr}.sra_2.fastq fastq/{wildcards.sample}_2.fastq
-        """
+# get only 2 tumor samples to speed up
+#def get_patient_bams_reduced(patient):
+#    normal = samples.query('patient == "%s" and tumor_normal == "normal"' % patient).sample_name
+#    tumor = ["%s_CTC_1_WES" % patient, "%s_CTC_2_WES" % patient]
+#    names = normal.tolist() + tumor
+#    bams = ["bams/%s.final.bam" % s for s in names]
+#    return(bams)
 
-####################################################
-########### Quality Control
-####################################################
+def get_patient_bams(patient):
+    names = samples.query('patient == "%s"' % patient).sample_name
+    bams = ["/home/pkus/data/LUAD_LUSC_Wang_2013/bams/%s.final.bam" % s for s in names]
+    return(bams)
 
-rule fastqc_1:
-    input: "fastq/{sample}_{n}.fastq"
-    output: ["qc/fastq/{sample}_{n}_fastqc.html", "qc/fastq/{sample}_{n}_fastqc.zip"]
-    threads: 20
-    shell: "~/programs/FastQC/fastqc -o qc/fastq -t 20 {input}"
+def get_patient_tumor_samples(patient):
+    q = 'patient == "%s" and tumor_normal == "tumor"' % patient
+    names = samples.query(q).sample_name
+    return(names)
 
-rule multiqc_1:
-    input: expand("qc/fastq/{sample}_{n}_fastqc.{ext}", sample=samples.sample_name, n=[1, 2], ext=["html", "zip"])
-    output: "qc/fastq.multiqc_report.html"
-    params:
-        dir = "qc/fastq_multiqc"
-    shell:
-        """
-        mkdir -p {params.dir}
-        rm -rf {params.dir}/*
-        multiqc -o {params.dir} qc/fastq
-        cp {params.dir}/multiqc_report.html {output}
-        """
+def get_patient_normal_samples(patient):
+    q = 'patient == "%s" and tumor_normal == "normal"' % patient
+    names = samples.query(q).sample_name
+    return(names)
 
-rule trimming:
-    input: ["fastq/{sample}_1.fastq", "fastq/{sample}_2.fastq"]
-    output: temp(["fastq/trimmed/{sample}_1_val_1.fq", "fastq/trimmed/{sample}_2_val_2.fq"])
-    shell:
-        """
-        trim_galore --paired -o fastq/trimmed {input}
-        """
-
-rule fastqc_2:
-    input: "fastq/trimmed/{sample}_{n}_val_{n}.fq"
-    output: ["qc/trimmed/{sample}_{n}_val_{n}_fastqc.html", "qc/trimmed/{sample}_{n}_val_{n}_fastqc.zip"]
-    threads: 20
-    shell: "~/programs/FastQC/fastqc -o qc/trimmed -t 20 {input}"
-
-rule multiqc_2:
-    input: expand("qc/trimmed/{sample}_{n}_val_{n}_fastqc.{ext}", sample=samples.sample_name, n=[1, 2], ext=["html", "zip"])
-    output: "qc/trimmed.multiqc_report.html"
-    params:
-        dir = "qc/trimmed_multiqc"
-    shell:
-        """
-        mkdir -p {params.dir}
-        rm -rf {params.dir}/*
-        multiqc -o {params.dir} qc/trimmed
-        cp {params.dir}/multiqc_report.html {output}
-        """
-
-####################################################
-########### Alignment and quality control
-####################################################
-
-rule bwa_mem:
-    input: ["fastq/trimmed/{sample}_1_val_1.fq", "fastq/trimmed/{sample}_2_val_2.fq"]
-    output: temp("bams/{sample}.sam")
-    threads: 12
-    params:
-        r = lambda wildcards: "@RG\\tID:%s\\tPL:ILLUMINA\\tSM:{%s}\\tLB:{%s}" % (wildcards.sample, wildcards.sample, wildcards.sample)
-    shell:
-        """
-        ~/programs/bwa-0.7.17/bwa mem \\
-            -M -Y -t 12 \\
-            -R "@RG\\tID:{wildcards.sample}\\tPL:ILLUMINA\\tSM:{wildcards.sample}\\tLB:{wildcards.sample}" \\
-            ~/resources/hg38_for_bwa/hs38DH.fa {input} > {output}
-        samtools quickcheck {output}
-        """
-
-rule sort_sam:
-    input: "bams/{sample}.sam"
-    output: temp("bams/{sample}.sorted.bam")
-    threads: 10
-    shell:
-        """
-        samtools sort -o {output} -O bam -@ 10 -m 8G {input}
-        samtools quickcheck {output}
-        """
-
-rule qc3:
-    input: "bams/{sample}.sorted.bam"
+rule mutect2:
+    input: lambda wildcards: get_patient_bams(wildcards.patient)
     output:
-        flagstat = "qc/bam/{sample}.sorted_flagstat",
-        fastqc = ["qc/bam/{sample}.sorted_fastqc.html", "qc/bam/{sample}.sorted_fastqc.zip"]
-    threads: 20
-    shell:
-        """
-        samtools flagstat {input} > {output.flagstat}
-        ~/programs/FastQC/fastqc -o qc/bam -t 20 {input}
-        """
-
-rule multiqc_3:
-    input: expand("qc/bam/{sample}.sorted_{file}", sample=samples.sample_name, file=["flagstat", "fastqc.html", "fastqc.zip"])
-    output: "qc/bam.multiqc_report.html"
+        vcf = "temp/{patient}/{patient}.{interval}.vcf.gz",
+        f1r2 = "temp/{patient}/{patient}.{interval}.f1r2.tar.gz",
+        stats = "temp/{patient}/{patient}.{interval}.vcf.gz.stats"
     params:
-        dir = "qc/bam_multiqc"
+        interval = "~/resources/gatk/scattered_intervals_100/{interval}-scattered.interval_list",
+        input = lambda wildcards, input: " -I ".join(input),
+        tumor_samples = lambda wildcards: " --tumor-sample ".join(get_patient_tumor_samples(wildcards.patient)),
+        normal_samples = lambda wildcards: " --normal-sample ".join(get_patient_normal_samples(wildcards.patient))
     shell:
         """
-        mkdir -p {params.dir}
-        rm -rf {params.dir}/*
-        multiqc -o {params.dir} qc/bam
-        cp {params.dir}/multiqc_report.html {output}
+        gatk Mutect2 \\
+            -I {params.input} \\
+            --normal-sample {params.normal_samples} \\
+            -R ~/resources/hg38_for_bwa/hs38DH.fa \\
+            -L {params.interval} \\
+            --germline-resource ~/resources/gatk/af-only-gnomad.hg38.vcf.gz \\
+            --f1r2-tar-gz {output.f1r2} \\
+            -O {output.vcf}
         """
 
-####################################################
-########### Mark duplicates
-####################################################
-
-rule mark_duplicates:
-    input: "bams/{sample}.sorted.bam"
-    output:
-        bam=temp("bams/{sample}.sorted.duplicates_marked.bam"),
-        metric="temp/mark_duplicates_metrics/{sample}.metrics"
-    shell:
-        """
-        ~/programs/gatk-4.1.8.0/gatk MarkDuplicates -I {input} -O {output.bam} -M {output.metric}
-        samtools quickcheck {output.bam}
-        """
-
-#rule mark_duplicates:
-#    input: "bams/{sample}.sorted.bam" #sam
-#    output: "bams/{sample}.sorted.duplicates_marked.bam"
-#    threads: 20
-#    shell:
-#        """
-#        ~/programs/gatk-4.1.8.0/gatk MarkDuplicatesSpark -I {input} -O {output}
-#        samtools quickcheck {output}
-#        """
-
-#rule set_tags:
-#    required if MarkDuplicatesSpark is used, not necessary now.
-#    input: "bams/{sample}.sorted.duplicates_marked.bam"
-#    output: temp("bams/{sample}.sorted.duplicates_marked.tagged.bam")
-#    threads: 6
-#    shell:
-#        """
-#        ~/programs/gatk-4.1.8.0/gatk SetNmMdAndUqTags -I {input} -R ~/resources/hg38_for_bwa/hs38DH.fa -O {output}
-#        samtools quickcheck {output}
-#        """
-#
-
-rule base_recalibrator:
-    input: "bams/{sample}.sorted.duplicates_marked.bam"
-    output: "temp/base_recalibrator_data/{sample}.recal_data.table"
+rule merge_vcf:
+    input: ["temp/{patient}/{patient}.%s.vcf.gz" % interval for interval in intervals]
+    output: "variants/{patient}.raw.vcf.gz"
     params:
-        ref="~/resources/hg38_for_bwa/hs38DH.fa",
-        vcf1="~/resources/gatk/Homo_sapiens_assembly38.known_indels.vcf",
-        vcf2="~/resources/gatk/Mills_and_1000G_gold_standard.indels.hg38.vcf"
-    threads: 6
+        vcfs = lambda wildcards, input: " -I ".join(input)
+    shell: "gatk MergeVcfs -I {params.vcfs} -O {output}"
+
+rule merge_mutect_stats:
+    input: ["temp/{patient}/{patient}.%s.vcf.gz.stats" % interval for interval in intervals]
+    output: "temp/{patient}.vcf.merged_stats"
+    params:
+        input = lambda wildcards, input: " --stats ".join(input)
     shell:
         """
-        ~/programs/gatk-4.1.8.0/gatk BaseRecalibrator \\
+        gatk MergeMutectStats \\
+            --output {output} \\
+            --stats {params.input}
+        """
+
+#################################################
+############ Contamination / segmentation part
+#################################################
+
+rule get_pileup_summaries:
+    input: "/home/pkus/data/LUAD_LUSC_Wang_2013/bams/{sample}.final.bam"
+    output: "temp/pileups/{sample}.pileups.table"
+    shell:
+        """
+        gatk GetPileupSummaries \\
             -I {input} \\
-            -R {params.ref} \\
-            --known-sites {params.vcf1} --known-sites {params.vcf2} \\
+            -L ~/resources/gatk/wgs_calling_regions.hg38.interval_list \\
+            -V ~/resources/gatk/af-only-gnomad.hg38.vcf.gz \\
             -O {output}
         """
 
-rule apply_bsqr:
+#-L {params.interval} \ \
+#    params:
+#        interval = "~/resources/gatk/scattered_intervals_100/{interval}-scattered.interval_list"
+#    rule gather_pileups:
+#    input: ["pileups/{sample}/{sample}.%s.pileups.table" % interval for interval in intervals]
+#    output: "pileups/{sample}.merged_pileups.table"
+#    params:
+#        input = lambda wildcards, input: " -I ".join(input)
+#    shell:
+#        """
+#        ~/programs/gatk-4.1.8.0/gatk GatherPileupSummaries \\
+#            --sequence-dictionary ~/resources/hg38_for_bwa/hs38DH.dict \\
+#            -I {params.input} \\
+#            -O {output}
+#        """
+
+def get_paired_normal_pileups(tumor_sample):
+    patient = samples.loc[samples.sample_name == tumor_sample, "patient"].tolist()[0]
+    # CalculateContamination takes only one normal sample. I think that bulk is the better one
+    # normal_samples = get_patient_normal_samples(patient).tolist()
+    # pileups = ["temp/pileups/%s.pileups.table" % sample for sample in normal_samples]
+    q = "patient == '%s' and first_choice_normal == 'yes'" % patient
+    normal_sample_name = samples.query(q).sample_name.tolist()[0]
+    pileups = "temp/pileups/%s.pileups.table" % normal_sample_name
+    return(pileups)
+
+rule calc_contamination:
     input:
-        bam="bams/{sample}.sorted.duplicates_marked.bam",
-        recal_table="temp/base_recalibrator_data/{sample}.recal_data.table"
-    params:
-        ref="~/resources/hg38_for_bwa/hs38DH.fa"
-    output: "bams/{sample}.final.bam"
-    threads: 6
+        tumor_pileup = "temp/pileups/{sample}.pileups.table",
+        normal_pileup = lambda wildcards: get_paired_normal_pileups(wildcards.sample)
+    output:
+        contamination = "temp/calc_contamination_output/{sample}.contamination.table",
+        segments = "temp/calc_contamination_output/{sample}.segments.table"
     shell:
         """
-        ~/programs/gatk-4.1.8.0/gatk ApplyBQSR \\
-            -I {input.bam} \\
-            -R {params.ref} \\
-            --bqsr-recal-file {input.recal_table} \\
-            -O {output}
-        samtools quickcheck {output}
+        gatk CalculateContamination \\
+            -I {input.tumor_pileup} \\
+            -matched {input.normal_pileup} \\
+            -segments {output.segments} \\
+            -O {output.contamination}
         """
 
+###############################################
+############ Orientation bias artifacts part
+###############################################
+
+rule learn_orientation:
+    input: ["temp/{patient}/{patient}.%s.f1r2.tar.gz" % interval for interval in intervals]
+    output: "temp/orientation_models/{patient}.artifact_priors.tar.gz"
+    params:
+        input = lambda wildcards, input: " -I ".join(input)
+    shell:
+        """
+        gatk LearnReadOrientationModel \\
+            -I {params.input} \\
+            -O {output}
+        """
+
+##############################
+############ Filtering part
+##############################
+
+def get_contamination_tables(patient):
+    # only tumor bulk!
+    q = 'patient == "%s" and tumor_normal == "tumor" and sc_bulk == "bulk"' % patient
+    tumor_bulk_samples = samples.query(q).sample_name
+    tables = ["temp/calc_contamination_output/%s.contamination.table" % sample for sample in tumor_bulk_samples]
+    return(tables)
+
+def get_segments_tables(patient):
+    # all tumor samples
+    tumor_samples = get_patient_tumor_samples(patient)
+    tables = ["temp/calc_contamination_output/%s.segments.table" % sample for sample in tumor_samples]
+    return(tables)
+
+rule filter_calls:
+    input:
+        vcf = "variants/{patient}.raw.vcf.gz",
+        contamination = lambda wildcards: get_contamination_tables(wildcards.patient),
+        segments = lambda wildcards: get_segments_tables(wildcards.patient),
+        ob_priors = "temp/orientation_models/{patient}.artifact_priors.tar.gz",
+        stats = "temp/{patient}.vcf.merged_stats"
+    output:
+        vcf = "variants/{patient}.filtered.vcf.gz",
+        filtering_stats = "variants/{patient}.filtered.vcf.stats"
+    params:
+        contamination = lambda wildcards, input: " --contamination-table ".join(input.contamination),
+        segments = lambda wildcards, input: " --tumor-segmentation ".join(input.segments)
+    shell:
+        """
+        gatk FilterMutectCalls \\
+            -V {input.vcf} \\
+            -R ~/resources/hg38_for_bwa/hs38DH.fa \\
+            -O {output.vcf} \\
+            --contamination-table {params.contamination} \\
+            --tumor-segmentation {params.segments} \\
+            --ob-priors {input.ob_priors} \\
+            -stats {input.stats} \\
+            --filtering-stats {output.filtering_stats}
+        """
+
+##########################################
+############ Annotate
+##########################################
+
+#rule funcotator:
+#    input: "variants/{patient}.vcf.gz"
+#    output: "variants/{patient}.avcf.gz"
+#    shell:
+#        """
+#        ~/programs/gatk-4.1.8.0/gatk Funcotator \\
+#            --variant {input} \\
+#            --reference ~/resources/hg38_for_bwa/hs38DH.fa \\
+#            --ref-version hg38 \\
+#            --data-sources-path ~/resources/gatk/funcotator2/funcotator_dataSources.v1.7.20200521s \\
+#            --output {output} \\
+#            --output-file-format VCF
+#        """
+
+#rule vep:
+#    input: "variants/{patient}.filtered.vcf.gz"
+#    output: "variants/{patient}.annot.vcf"
+#    shell:
+#        """
+#        srun vep -i {input} -o {output} --offline --vcf
+#        """
