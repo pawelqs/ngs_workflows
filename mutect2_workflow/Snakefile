@@ -17,7 +17,7 @@ localrules: all
 rule all:
     input:
         expand("variants/{patient}.raw.vcf.gz", patient = patients),
-        expand("variants/{patient}.filtered.vcf.gz", patient = patients),
+        expand("variants/{patient}.annot.vcf", patient = patients),
 
 
 ##############################
@@ -224,10 +224,11 @@ rule filter_calls:
 #            --output-file-format VCF
 #        """
 
-#rule vep:
-#    input: "variants/{patient}.filtered.vcf.gz"
-#    output: "variants/{patient}.annot.vcf"
-#    shell:
-#        """
-#        srun vep -i {input} -o {output} --offline --vcf
-#        """
+rule vep:
+    input: "variants/{patient}.filtered.vcf.gz"
+    output: "variants/{patient}.annot.vcf"
+    shell:
+        """
+		export PATH=/usr/bin:$PATH
+        srun vep -i {input} -o {output} --offline --vcf
+        """
