@@ -5,7 +5,7 @@ os.makedirs("outputs", exist_ok=True)
 
 samples = pd.read_csv("mutect_pipeline_table.tsv", delimiter='\t')
 patients = samples.patient.unique().tolist()
-patients = ["P1"]
+patients = ["P1", "P2", "P3", "P4", "P8"]
 
 intervals = glob_wildcards('/home/pkus/resources/gatk/scattered_intervals_100/{interval}-scattered.interval_list').interval
 ###################################################
@@ -191,7 +191,7 @@ rule filter_calls:
         vcf = "variants/{patient}.filtered.vcf.gz",
         filtering_stats = "variants/{patient}.filtered.vcf.stats"
     params:
-        contamination = lambda wildcards, input: " --contamination-table ".join(input.contamination),
+        contamination = lambda wildcards, input: "".join(["--contamination-table %s " % file for file in input.contamination]),
         segments = lambda wildcards, input: " --tumor-segmentation ".join(input.segments)
     shell:
         """
@@ -199,11 +199,10 @@ rule filter_calls:
             -V {input.vcf} \\
             -R ~/resources/hg38_for_bwa/hs38DH.fa \\
             -O {output.vcf} \\
-            --contamination-table {params.contamination} \\
             --tumor-segmentation {params.segments} \\
             --ob-priors {input.ob_priors} \\
             -stats {input.stats} \\
-            --filtering-stats {output.filtering_stats}
+            --filtering-stats {output.filtering_stats} {params.contamination}
         """
 
 ##########################################
