@@ -119,17 +119,17 @@ rule sort_sam:
 rule qc3:
     input: "bams/{sample}.sorted.bam"
     output:
-        flagstat = "qc/bam/{sample}.sorted_flagstat",
+        stats = "qc/bam/{sample}.sorted_stats",
         fastqc = ["qc/bam/{sample}.sorted_fastqc.html", "qc/bam/{sample}.sorted_fastqc.zip"]
     threads: 20
     shell:
         """
-        samtools flagstat {input} > {output.flagstat}
+        samtools stats {input} > {output.stats}
         ~/programs/FastQC/fastqc -o qc/bam -t 20 {input}
         """
 
 rule multiqc_3:
-    input: expand("qc/bam/{sample}.sorted_{file}", sample=samples.sample_name, file=["flagstat", "fastqc.html", "fastqc.zip"])
+    input: expand("qc/bam/{sample}.sorted_{file}", sample=samples.sample_name, file=["stats", "fastqc.html", "fastqc.zip"])
     output: "qc/bam.multiqc_report.html"
     params:
         dir = "qc/bam_multiqc"
