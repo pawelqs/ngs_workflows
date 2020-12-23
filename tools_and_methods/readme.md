@@ -13,7 +13,6 @@
 
 ## comparison of phylogenetic trees:
 
-* Tanglegrams, `dendextend` R package
 
 # Tools for single cells
 
@@ -22,7 +21,7 @@
 ## Identification of SNV:
 
 *[Identification of somatic mutations in single cell DNA-seq using a spatial model of allelic imbalance](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6715686/)
-	* Monovar
+	* Monovar (makes corrections for for allelic dropout)
 	* SCcaller - they developped SCMDA
 	* SCAN-SNV - for MDA amplification results <- their method, do not take into account CNV
 
@@ -50,6 +49,10 @@
 
 ## mutations analysis:
 
+* To test whether the genotype matrix violates the infinite-sites assumption, we ran the four-gamete test. The four-gamete theorem states that an m × n binary matrix M has 
+an undirected perfect phylogeny if and only if no pair of columns contain all four binary pairs (0,0; 0,1; 1,0; and 1,1), where m represents the number of taxa (leaves of the tree) 
+and n represents genomic sites [47].
+
 * 2-dimensional clustering in the MDS space (r function `cmdscale(x, eig = TRUE, k = 2)` where x is a matrix with cells in the columns and mutations in the rows)
 * continue with hierarchical clustering using heatmaps (`heatmap.2()` from qplots (CRAN))
 
@@ -57,12 +60,23 @@
 * use SCITE (Jahn et al. 2016) to compute phylogenetic mutation trees, use Cytoscape to redraw it [1]
 * OncoNEM: (Ross et al. 2016)
 * Single Cell Genotyper: (Roth et al. 2016)
-* SiFit (Zafar et al. 2017)
+* SiFit (Zafar et al. 2017) - uses finite site model
+
+**comparison of tree**
+* False negative (FN) distance : This counts the edges in Tt that induce bipartitions that are not present in C(Ti). This distance is normalized by dividing by the total number of bipartitions in Tt,
+* False positive (FP) distance : This counts the edges in Ti that induce bipartitions that are not present in C(Tt). This distance is normalized by dividing by the total number of bipartitions in Ti
+* Robinson–Foulds (RF) distance : The Robinson–Foulds distance is the average of the FP and FN distances. This is the most common error metric `dist.topo()` from `ape` package
+* `dendextend` R package
+	* tanglegram()
+	* dend_diff()
+	* entanglement()
+	* cor_bakers_gamma() - Baker’s Gamma Index
 
 **Shah Lab**
 
 * TitanCNA
 * HMMcopy
+
 
 # Wiki
 

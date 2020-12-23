@@ -1,0 +1,73 @@
+import pandas as pd
+import os
+
+localrules: all, copy_results
+
+samples = pd.read_csv("ginkgo_table.tsv", delimiter='\t')
+results = ["SegCopy", "SegBreaks", "SegFixed", "SegNorm", "SegStats", "CNV1", "CNV2"]
+diploid_ref_sample_name = "P1_leukocyte_WGS"
+
+rule all:
+    input:
+        expand("results/{res}", res=results)
+
+# output structure:
+# SegStats  - Bin count statistics for each cell
+# SegBreaks - Matrix that encodes whether a cell has a breakpoint at a bin position; 1 = breakpoint present, 0 = no breakpoint at that position; rows = bins, columns = cells
+# SegCopy   - Integer coopy-number state for each cell at every bin position; rows = bins, columns = cells
+# SegNorm   - Normalized bin counts for each cell at every bin position; rows = bins, columns = cells
+# SegFixed  - Normalized and segmented bin counts for each cell at every bin position; rows = bins, columns = cells
+# CNV1      - List of regions with copy number events
+# CNV2      - List of regions of amplifications (+1) and deletions (-1)
+
+
+###################################
+########## Rules
+###################################
+
+rule bam_to_bed:
+    input: "/home/pkus/data/LUAD_LUSC_Wang_2013/bams/{sample}.final.bam"
+    output: "temp/tumor_cells/{sample}.bed.gz"
+    shell: 
+        """
+        samtools view -q 20 -F 1024 -b {input} > temp/tumor_cells/{wildcards.sample}.bam
+        bamToBed -i temp/tumor_cells/{wildcards.sample}.bam > temp/tumor_cells/{wildcards.sample}.bed
+        rm temp/tumor_cells/{wildcards.sample}.bam
+        gzip temp/tumor_cells/{wildcards.sample}.bed
+        """
+        
+rule diploid_ref:
+    input: "/home/pkus/data/LUAD_LUSC_Wang_2013/bams/{sample}.final.bam"
+    output: "temp/diploid_ref/{sample}.bed"
+    shell: 
+        """
+        samtools view -q 20 -F 1024 -b {input} > temp/diploid_ref/{wildcards.sample}.bam
+        bamToBed -i temp/diploid_ref/{wildcards.sample}.bam > temp/diploid_ref/{wildcards.sample}.bed
+        rm temp/diploid_ref/{wildcards.sample}.bam
+        """
+
+rule ginkgo:
+    input: 
+        beds = expand("temp/tumor_cells/{sample}.bed.gz", sample=samples.sample_name),
+        ref_bed = "/home/pkus/ginkgo_test/temp/diploid_ref/%s.bed" % diploid_ref_sample_name
+    output: expand("temp/tumor_cells/{res}", res=results)
+    conda: "ginkgo_env.yml"
+    params:
+        ref = "temp/diploid_ref/%s.bed.gz" % diploid_ref_sample_name
+    shell:
+        """
+        Rscript -e 'if (length(grep("gplots", installed.packages(), value = TRUE)) == 0) devtools::install_github("ChristophH/gplots")'
+        ~/programs/ginkgo/ginkgo/cli/ginkgo.sh \\
+            --input ~/ginkgo_test/temp/tumor_cells \\
+            --genome hg19 \\
+            --segmentation 2 \\
+            --ref {input.ref_bed} \\
+            --binning variable_500000_101_bwa
+        """
+
+rule copy_results:
+    input: "temp/tumor_cells/{res}"
+    output: "results/{res}"
+    shell: "cp {input} {output}"
+
+# ~/programs/ginkgo/ginkgo/cli/ginkgo.sh --input ~/ginkgo_test/temp/tumor_cells --genome hg19 --segmentation 2 --ref temp/diploid_ref/P1_leukocyte_WGS.bed.gz --binning variable_500000_101_bwa
