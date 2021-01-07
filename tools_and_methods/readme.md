@@ -78,6 +78,13 @@ and n represents genomic sites [47].
 * HMMcopy
 
 
+**R packages**
+
+* tidyverse
+* GenomicRanges, plyranges
+* DESeq2. edgeR
+* fgsea, tmod
+
 # Wiki
 
 ## Methods of single cell genome amplification:
