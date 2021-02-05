@@ -84,6 +84,7 @@ and n represents genomic sites [47].
 * GenomicRanges, plyranges
 * DESeq2. edgeR
 * fgsea, tmod
+* vcfR (especially this one), VariantAnnotation
 
 # Wiki
 
