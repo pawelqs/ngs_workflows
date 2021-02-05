@@ -12,7 +12,7 @@
     "react-scripts": "4.0.2",
     "web-vitals": "^1.1.0"
   },
-  "homepage": "https://pawel125.github.io/ngs_workflows/",
+  "homepage": "https://pawel125.github.io/docs/",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
