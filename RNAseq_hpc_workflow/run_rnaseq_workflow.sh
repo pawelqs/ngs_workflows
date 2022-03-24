@@ -27,5 +27,5 @@ mkdir -p outputs
 
 sbatch \
     --output=outputs/snakemake.out \
-    --job-name=duy \
+    --job-name=mflorez \
     --wrap='snakemake -j 100 -k --use-conda --cluster-config workflow/cluster.yml --cluster="sbatch -A {cluster.account} --mem={cluster.mem} --time={cluster.time} --cpus-per-task={cluster.cpus} --partition={cluster.partition} --job-name={cluster.job_name} --output={cluster.output}"'
