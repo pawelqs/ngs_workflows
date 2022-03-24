@@ -1,0 +1,267 @@
+import pandas as pd
+import os
+
+genome_fasta = "/scratch/scratch-hdd/pkus/resources/rnaseq_files/gencode_mm_28/GRCm39.primary_assembly.genome.fa"
+star_genome_dir = "/scratch/scratch-hdd/pkus/resources/star_genomes/gencode_mm_28_149"
+rseqc_ref = "/scratch/scratch-hdd/pkus/resources/rnaseq_files/gencode_mm_28/mm28_RefSeq.bed"
+sjdbOverhang = 149
+
+os.makedirs("qc/fastq", exist_ok = True)
+os.makedirs("qc/trimmed", exist_ok = True)
+os.makedirs("qc/bam", exist_ok = True)
+
+samples = pd.read_csv("samples.tsv", sep = "\t", comment = "#")
+samples["filename"] = samples.library_name + "_" + samples.read_file
+
+fastq_files = dict(zip(samples.filename, samples.fastq_gz))
+lib_names = set(samples.library_name)
+libraries = {
+    lib: samples[samples.library_name == lib].filename.tolist()
+    for lib in lib_names}
+
+
+rule all:
+    input:
+        expand("bams/{library}.bam", library=lib_names),
+        "counts/counts.all.tsv",
+        "qc/fastq.multiqc_report.html",
+        "qc/trimmed.multiqc_report.html",
+        "qc/bam.multiqc_report.html"
+
+
+rule make_links:
+    input: lambda wildcards: fastq_files[wildcards.filename]
+    output: "fastq/{filename}.fastq.gz"
+    shell:
+        """
+        ln {input} {output}
+        """
+
+####################################################
+########### FASTQ Quality Control
+####################################################
+
+rule fastqc_1:
+    input: "fastq/{filename}.fastq.gz"
+    output: "qc/fastq/{filename}_fastqc.html"
+    threads: 20
+    shell: "fastqc -o qc/fastq -t 20 {input}"
+
+
+rule fastq_screen_1:
+    input: "fastq/{filename}.fastq.gz"
+    output: "qc/fastq/{filename}_screen.html"
+    threads: 10
+    shell: 
+        """
+        fastq_screen \\
+            --force \\
+            --outdir qc/fastq \\
+            --threads {threads} \\
+            {input}
+        """
+
+
+rule multiqc_1:
+    input: expand("qc/fastq/{filename}_{report}.html", filename=samples.filename, report=["fastqc", "screen"])
+    output: "qc/fastq.multiqc_report.html"
+    params:
+        dir = "qc/fastq_multiqc"
+    shell:
+        """
+        mkdir -p {params.dir}
+        multiqc --force -o {params.dir} qc/fastq
+        cp {params.dir}/multiqc_report.html {output}
+        """
+
+####################################################
+########### Trimming and Quality Control
+####################################################
+
+rule trimming:
+    input: ["fastq/{library}_R1.fastq.gz", "fastq/{library}_R2.fastq.gz"]
+    output: ["intermediate/trimmed/{library}_R1_val_1.fq.gz", "intermediate/trimmed/{library}_R2_val_2.fq.gz"]
+    shell:
+        """
+        trim_galore --paired -o intermediate/trimmed {input}
+        """
+
+
+rule fastqc_2:
+    input: "intermediate/trimmed/{library}_R{n}_val_{n}.fq.gz"
+    output: ["qc/trimmed/{library}_R{n}_val_{n}_fastqc.html", "qc/trimmed/{library}_R{n}_val_{n}_fastqc.zip"]
+    threads: 20
+    shell: "~/programs/FastQC/fastqc -o qc/trimmed -t 20 {input}"
+
+
+rule fastq_screen_2:
+    input: "intermediate/trimmed/{library}_R{n}_val_{n}.fq.gz"
+    output: "qc/trimmed/{library}_R{n}_val_{n}_screen.html"
+    threads: 10
+    shell: 
+        """
+        fastq_screen \\
+            --force \\
+            --outdir qc/trimmed \\
+            --threads {threads} \\
+            {input}
+        """
+
+
+rule multiqc_2:
+    input: 
+        expand("qc/trimmed/{library}_R{n}_val_{n}_{raport}.html", 
+                library=lib_names, n=[1, 2], raport=["fastqc", "screen"])
+    output: "qc/trimmed.multiqc_report.html"
+    params:
+        dir = "qc/trimmed_multiqc"
+    shell:
+        """
+        mkdir -p {params.dir}
+        rm -rf {params.dir}/*
+        multiqc -o {params.dir} qc/trimmed intermediate/trimmed
+        cp {params.dir}/multiqc_report.html {output}
+        """
+
+####################################################
+########### Alignment and quality control
+####################################################
+
+rule star:
+    input:
+        fastq = ["intermediate/trimmed/{library}_R1_val_1.fq.gz", "intermediate/trimmed/{library}_R2_val_2.fq.gz"],
+        genome = star_genome_dir + "/Genome"
+    output: 
+        bam = "bams/{library}.bam",
+        stats = "bams/{library}/Log.final.out"
+    threads: 12
+    params:
+        genome_dir = star_genome_dir,
+        sjdb_overhang = sjdbOverhang
+    shell:
+        """
+        ulimit -n 10000
+        STAR \\
+            --runThreadN 12 \\
+            --genomeDir {params.genome_dir} \\
+            --readFilesIn {input.fastq} \\
+            --sjdbOverhang {params.sjdb_overhang} \\
+            --outFileNamePrefix bams/{wildcards.library}/ \\
+            --twopassMode Basic \\
+            --outSAMtype BAM SortedByCoordinate \\
+            --outReadsUnmapped Fastx \\
+            --readFilesCommand zcat
+        ln bams/{wildcards.library}/Aligned.sortedByCoord.out.bam bams/{wildcards.library}.bam
+        samtools quickcheck {output.bam}
+        """
+# --outReadsUnmapped Fastx to keep them in BAM, e.g. if going to keep only BAMs
+
+
+rule index_bam:
+    input: "{file}.bam"
+    output: "{file}.bam.bai"
+    shell: "samtools index {input}"
+
+###################################################
+########## Bam quality control
+###################################################
+
+rule fastqc_3:
+    input: "bams/{library}.bam"
+    output: ["qc/bam/{library}_fastqc.html", "qc/bam/{library}_fastqc.zip"]
+    threads: 20
+    shell: "~/programs/FastQC/fastqc -o qc/bam -t 20 {input}"
+
+
+# rule prepare_rseqc_ref:
+    # input: "/home/pkus/resources/rnaseq_files/mm_gencode/gencode.vM25.primary_assembly.annotation.gtf"
+    # output: "intermediate/rseqc_files/ref_model.bed"
+    # shell: 
+        # """
+        # awk '{{ if ($0 ~ "transcript_id") print $0; else print $0" transcript_id \"\";"; }}' {input} | gtf2bed --do-not-sort - > {output}
+        # """
+
+
+rule read_GC_py:
+    input: "bams/{library}.bam"
+    output: "qc/bam/{library}.read_GC.GC.xls"
+    conda: "rseqc_env.yaml"
+    shell: "read_GC.py -i {input} -o qc/bam/{wildcards.library}.read_GC"
+
+
+rule tin_py:
+    input: 
+        bam = "bams/{library}.bam",
+        bai = "bams/{library}.bam.bai",
+        ref_bed = rseqc_ref
+    output:
+        # xls = "qc/bam/{library}.tin.xls",
+        summary = "qc/bam/{library}.tin.txt"
+    conda: "rseqc_env.yaml"
+    shell:
+        """
+            cd qc/bam
+            tin.py -i ../../{input.bam} -r {input.ref_bed}
+            cd ../..
+            mv qc/bam/{wildcards.library}.summary.txt {output.summary}
+        """
+# mv qc/bam/{wildcards.library}.tin.xls {output.xls}
+
+rule inner_distance_py:
+    input:
+        bam = "bams/{library}.bam",
+        ref_bed = rseqc_ref
+    output: ["qc/bam/{library}.inner_distance_freq.txt", "qc/bam/{library}.inner_distance.txt"]
+    conda: "rseqc_env.yaml"
+    shell: "inner_distance.py -i {input.bam} -r {input.ref_bed} -o qc/bam/{wildcards.library}"
+
+
+rule genebody_coverage_py:
+    input:
+        bam = "bams/{library}.bam",
+        ref_bed = rseqc_ref
+    output: "qc/bam/{library}.geneBodyCoverage.txt"
+    conda: "rseqc_env.yaml"
+    shell: "geneBody_coverage.py -i {input.bam} -r {input.ref_bed} -o qc/bam/{wildcards.library}"
+
+
+rule samtools_stats:
+    input: 
+        bam = "bams/{library}.bam",
+        ref_fasta = genome_fasta
+    output: "qc/bam/{library}.samtools_stats"
+    shell: "samtools stats -r {input.ref_fasta} {input.bam} > {output}"
+
+
+rule multiqc_3:
+    input:
+        star = expand("bams/{library}/Log.final.out", library=lib_names),
+        fastqc = expand("qc/bam/{library}_{file}", library=lib_names, file=["fastqc.html", "fastqc.zip"]),
+        read_GC = expand("qc/bam/{library}.read_GC.GC.xls", library=lib_names),
+        tin_py = expand("qc/bam/{library}.tin.txt", library=lib_names),
+        inner_distance = expand("qc/bam/{library}.inner_distance.txt", library=lib_names),
+        geneBody_coverage = expand("qc/bam/{library}.geneBodyCoverage.txt", library=lib_names),
+        samtools_stats = expand("qc/bam/{library}.samtools_stats", library=lib_names)
+    output: "qc/bam.multiqc_report.html"
+    params:
+        dir = "qc/bam_multiqc"
+    shell:
+        """
+        mkdir -p {params.dir}
+        rm -rf {params.dir}/*
+        multiqc -o {params.dir} qc/bam bams
+        cp {params.dir}/multiqc_report.html {output}
+        """
+
+#####################################################
+########## Get counts
+#####################################################
+# http://bioinf.wehi.edu.au/featureCounts/
+
+rule get_counts_all:
+    input: expand("bams/{library}.bam", library=lib_names)
+    output: "counts/counts.all.tsv"
+    threads: 10
+    params: 
+        gtf = "~/resources/rnaseq_files/mm_gencode/gencode.vM25.primary_assembly.annotation.gtf"
+    shell: "featureCounts -T 10 -t gene -g gene_id -a {params.gtf} -o {output} {input}"

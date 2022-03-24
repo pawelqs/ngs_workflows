@@ -1,0 +1,6 @@
+.snakemake/*
+outputs/*
+snakemake.out
+fastq/*
+intermediate/*
+qc/*

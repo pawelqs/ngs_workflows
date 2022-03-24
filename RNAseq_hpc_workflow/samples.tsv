@@ -1,0 +1,9 @@
+library_name	read_file	fastq_gz
+WT_1	R1	rnaseq_data/Batch_1/WT_R1.fastq.gz
+WT_1	R2	rnaseq_data/Batch_1/WT_R2.fastq.gz
+WTinf_1	R1	rnaseq_data/Batch_1/Infected-WT_R1.fastq.gz
+WTinf_1	R2	rnaseq_data/Batch_1/Infected-WT_R2.fastq.gz
+WT_2	R1	rnaseq_data/Batch_2/WT_R1.fastq.gz
+WT_2	R2	rnaseq_data/Batch_2/WT_R2.fastq.gz
+WTinf_2	R1	rnaseq_data/Batch_2/Infected_WT_04_R1.fastq.gz
+WTinf_2	R2	rnaseq_data/Batch_2/Infected_WT_04_R2.fastq.gz

@@ -1,0 +1,5 @@
+name: R_env
+channels:
+  - bioconda
+dependencies:
+  - r-tidyverse

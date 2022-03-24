@@ -1,0 +1,98 @@
+__default__:
+    account: pkus
+    job_name: snake_job
+    mem: 10G
+    time: "200:0:0"
+    cpus: 20
+    output: outputs/slurm_%A.txt
+    partition: extuser
+fastqc_1:
+    job_name: fastqc_1
+    cpus: 20
+    partition: ibm_small
+    output: outputs/fastqc_1_%A.txt
+fastqc_2:
+    job_name: fastqc_2
+    cpus: 20
+    partition: ibm_small
+    output: outputs/fastqc_2_%A.txt
+fastqc_3:
+    job_name: fastqc_3
+    cpus: 20
+    partition: ibm_small
+    output: outputs/fastqc_3_%A.txt
+fastq_screen_1:
+    job_name: screen1
+    cpus: 20
+    partition: phi
+    output: outputs/fastq_screen_1_%A.txt
+fastq_screen_2:
+    job_name: screen2
+    cpus: 20
+    partition: phi
+    output: outputs/fastq_screen_2_%A.txt
+gether_fastq_screen:
+    job_name: gather_screen
+    cpus: 20
+    partition: phi
+    output: outputs/gether_fastq_screen_%A.txt
+trimming:
+    job_name: trimming
+    cpus: 20
+    partition: extuser
+    output: outputs/trimming_%A.txt
+star:
+    job_name: star
+    cpus: 20
+    partition: phi
+    output: outputs/star_%A.txt
+mark_duplicates:
+    job_name: mark_duplicates
+    cpus: 10
+    partition: phi
+    output: outputs/mark_duplicates_%A.txt
+read_GC_py:
+    job_name: read_GC_py
+    cpus: 10
+    partition: phi
+    output: outputs/read_GC_py_%A.txt
+tin_py:
+    job_name: tin_py
+    cpus: 4
+    partition: phi
+    output: outputs/tin_py_%A.txt
+inner_distance_py:
+    job_name: inner_distance_py
+    cpus: 4
+    partition: phi
+    output: outputs/inner_distance_py_%A.txt
+genebody_coverage_py:
+    job_name: genebody_coverage_py
+    cpus: 4
+    partition: phi
+    output: outputs/genebody_coverage_py_%A.txt
+samtools_stats:
+    job_name: samtools_stats_py
+    cpus: 4
+    partition: phi
+    output: outputs/samtools_stats_%A.txt
+multiqc_3:
+    job_name: multiqc_3
+    cpus: 4
+    partition: phi
+    output: outputs/multiqc_3_%A.txt
+get_counts:
+    job_name: get_counts
+    cpus: 10
+    partition: phi
+    output: outputs/get_counts_%A.txt
+get_counts_deduplicated:
+    job_name: get_counts_deduplicated
+    cpus: 10
+    partition: phi
+    output: outputs/get_counts_deduplicated_%A.txt
+get_counts_all:
+    job_name: get_counts_raw
+    cpus: 10
+    partition: phi
+    output: outputs/get_counts_raw_%A.txt
