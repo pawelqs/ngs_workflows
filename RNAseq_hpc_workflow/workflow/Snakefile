@@ -4,6 +4,7 @@ import os
 configfile: "config/config.yml"
 
 
+os.makedirs("fastq", exist_ok = True)
 os.makedirs("qc/fastq", exist_ok = True)
 os.makedirs("qc/trimmed", exist_ok = True)
 os.makedirs("qc/bam", exist_ok = True)
@@ -32,7 +33,7 @@ rule make_links:
     output: "fastq/{filename}.fastq.gz"
     shell:
         """
-        ln {input} {output}
+        ln -s {input} {output}
         """
 
 ####################################################
