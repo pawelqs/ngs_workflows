@@ -1,10 +1,14 @@
 import pandas as pd
 import os
 
-genome_fasta = "/scratch/scratch-hdd/pkus/resources/rnaseq_files/gencode_mm_28/GRCm39.primary_assembly.genome.fa"
-star_genome_dir = "/scratch/scratch-hdd/pkus/resources/star_genomes/gencode_mm_28_149"
-rseqc_ref = "/scratch/scratch-hdd/pkus/resources/rnaseq_files/gencode_mm_28/mm28_RefSeq.bed"
-sjdbOverhang = 149
+# genome_fasta = "/scratch/scratch-hdd/pkus/resources/rnaseq_files/gencode_mm_28/GRCm39.primary_assembly.genome.fa"
+# star_genome_dir = "/scratch/scratch-hdd/pkus/resources/star_genomes/gencode_mm_28_149"
+# rseqc_ref = "/scratch/scratch-hdd/pkus/resources/rnaseq_files/gencode_mm_28/mm28_RefSeq.bed"
+# gtf_file = "/scratch/scratch-hdd/pkus/resources/rnaseq_files/GRCh38.p13_gencode/gencode.v38.primary_assembly.annotation.gtf"
+# sjdbOverhang = 149
+
+configfile: "config/config.yml"
+
 
 os.makedirs("qc/fastq", exist_ok = True)
 os.makedirs("qc/trimmed", exist_ok = True)
@@ -130,20 +134,19 @@ rule multiqc_2:
 rule star:
     input:
         fastq = ["intermediate/trimmed/{library}_R1_val_1.fq.gz", "intermediate/trimmed/{library}_R2_val_2.fq.gz"],
-        genome = star_genome_dir + "/Genome"
+        genome = config["star_genome_dir"] + "/Genome"
     output: 
         bam = "bams/{library}.bam",
         stats = "bams/{library}/Log.final.out"
     threads: 12
     params:
-        genome_dir = star_genome_dir,
-        sjdb_overhang = sjdbOverhang
+        sjdb_overhang = config["sjdbOverhang"]
     shell:
         """
         ulimit -n 10000
         STAR \\
             --runThreadN 12 \\
-            --genomeDir {params.genome_dir} \\
+            --genomeDir {input.genome_dir} \\
             --readFilesIn {input.fastq} \\
             --sjdbOverhang {params.sjdb_overhang} \\
             --outFileNamePrefix bams/{wildcards.library}/ \\
@@ -193,7 +196,7 @@ rule tin_py:
     input: 
         bam = "bams/{library}.bam",
         bai = "bams/{library}.bam.bai",
-        ref_bed = rseqc_ref
+        ref_bed = config["rseqc_ref"]
     output:
         # xls = "qc/bam/{library}.tin.xls",
         summary = "qc/bam/{library}.tin.txt"
@@ -210,7 +213,7 @@ rule tin_py:
 rule inner_distance_py:
     input:
         bam = "bams/{library}.bam",
-        ref_bed = rseqc_ref
+        ref_bed = config["rseqc_ref"]
     output: ["qc/bam/{library}.inner_distance_freq.txt", "qc/bam/{library}.inner_distance.txt"]
     conda: "rseqc_env.yaml"
     shell: "inner_distance.py -i {input.bam} -r {input.ref_bed} -o qc/bam/{wildcards.library}"
@@ -219,7 +222,7 @@ rule inner_distance_py:
 rule genebody_coverage_py:
     input:
         bam = "bams/{library}.bam",
-        ref_bed = rseqc_ref
+        ref_bed = config["rseqc_ref"]
     output: "qc/bam/{library}.geneBodyCoverage.txt"
     conda: "rseqc_env.yaml"
     shell: "geneBody_coverage.py -i {input.bam} -r {input.ref_bed} -o qc/bam/{wildcards.library}"
@@ -228,7 +231,7 @@ rule genebody_coverage_py:
 rule samtools_stats:
     input: 
         bam = "bams/{library}.bam",
-        ref_fasta = genome_fasta
+        ref_fasta = config["genome_fasta"]
     output: "qc/bam/{library}.samtools_stats"
     shell: "samtools stats -r {input.ref_fasta} {input.bam} > {output}"
 
@@ -259,9 +262,9 @@ rule multiqc_3:
 # http://bioinf.wehi.edu.au/featureCounts/
 
 rule get_counts_all:
-    input: expand("bams/{library}.bam", library=lib_names)
+    input: 
+        bams=expand("bams/{library}.bam", library=lib_names),
+        gtf=config["gtf_file"]
     output: "counts/counts.all.tsv"
     threads: 10
-    params: 
-        gtf = "~/resources/rnaseq_files/mm_gencode/gencode.vM25.primary_assembly.annotation.gtf"
-    shell: "featureCounts -T 10 -t gene -g gene_id -a {params.gtf} -o {output} {input}"
+    shell: "featureCounts -T 10 -t gene -g gene_id -a {input.gtf} -o {output} {input.bams}"
