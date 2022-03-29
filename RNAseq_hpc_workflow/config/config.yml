@@ -1,3 +1,5 @@
+name: BC_rna
+name: rnaseq_smk
 genome_fasta: /scratch/scratch-hdd/pkus/resources/rnaseq_files/gencode_mm_28/GRCm39.primary_assembly.genome.fa
 star_genome_dir: /scratch/scratch-hdd/pkus/resources/star_genomes/gencode_mm_28_149
 rseqc_ref: /scratch/scratch-hdd/pkus/resources/rnaseq_files/gencode_mm_28/mm28_RefSeq.bed

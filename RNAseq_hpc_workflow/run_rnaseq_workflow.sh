@@ -25,7 +25,10 @@ mkdir -p outputs
 # --job-name={cluster.job_name}\
 # --output={cluster.output}"
 
+JOB_NAME=$(grep name config/config.yml | cut -f2 -d" ")
+
 sbatch \
     --output=outputs/snakemake.out \
-    --job-name=mflorez \
-    --wrap='snakemake -j 100 -k --use-conda --cluster-config workflow/cluster.yml --cluster="sbatch -A {cluster.account} --mem={cluster.mem} --time={cluster.time} --cpus-per-task={cluster.cpus} --partition={cluster.partition} --job-name={cluster.job_name} --output={cluster.output}"'
+    --partition=ibm_small \
+    --job-name=$JOB_NAME \
+    --wrap='snakemake -j 50 -k --use-conda --cluster-config config/cluster.yml --cluster="sbatch -A {cluster.account} --mem={cluster.mem} --time={cluster.time} --cpus-per-task={cluster.cpus} --partition={cluster.partition} --job-name={cluster.job_name} --output={cluster.output}"'
