@@ -134,13 +134,14 @@ rule star:
         stats = "bams/{library}/Log.final.out"
     threads: 12
     params:
+        genome_dir = config["star_genome_dir"],
         sjdb_overhang = config["sjdbOverhang"]
     shell:
         """
         ulimit -n 10000
         STAR \\
             --runThreadN 12 \\
-            --genomeDir {input.genome_dir} \\
+            --genomeDir {params.genome_dir} \\
             --readFilesIn {input.fastq} \\
             --sjdbOverhang {params.sjdb_overhang} \\
             --outFileNamePrefix bams/{wildcards.library}/ \\
@@ -170,19 +171,10 @@ rule fastqc_3:
     shell: "~/programs/FastQC/fastqc -o qc/bam -t 20 {input}"
 
 
-# rule prepare_rseqc_ref:
-    # input: "/home/pkus/resources/rnaseq_files/mm_gencode/gencode.vM25.primary_assembly.annotation.gtf"
-    # output: "intermediate/rseqc_files/ref_model.bed"
-    # shell: 
-        # """
-        # awk '{{ if ($0 ~ "transcript_id") print $0; else print $0" transcript_id \"\";"; }}' {input} | gtf2bed --do-not-sort - > {output}
-        # """
-
-
 rule read_GC_py:
     input: "bams/{library}.bam"
     output: "qc/bam/{library}.read_GC.GC.xls"
-    conda: "rseqc_env.yaml"
+    conda: "envs/rseqc_env.yaml"
     shell: "read_GC.py -i {input} -o qc/bam/{wildcards.library}.read_GC"
 
 
@@ -194,7 +186,7 @@ rule tin_py:
     output:
         # xls = "qc/bam/{library}.tin.xls",
         summary = "qc/bam/{library}.tin.txt"
-    conda: "rseqc_env.yaml"
+    conda: "envs/rseqc_env.yaml"
     shell:
         """
             cd qc/bam
@@ -209,7 +201,7 @@ rule inner_distance_py:
         bam = "bams/{library}.bam",
         ref_bed = config["rseqc_ref"]
     output: ["qc/bam/{library}.inner_distance_freq.txt", "qc/bam/{library}.inner_distance.txt"]
-    conda: "rseqc_env.yaml"
+    conda: "envs/rseqc_env.yaml"
     shell: "inner_distance.py -i {input.bam} -r {input.ref_bed} -o qc/bam/{wildcards.library}"
 
 
@@ -218,7 +210,7 @@ rule genebody_coverage_py:
         bam = "bams/{library}.bam",
         ref_bed = config["rseqc_ref"]
     output: "qc/bam/{library}.geneBodyCoverage.txt"
-    conda: "rseqc_env.yaml"
+    conda: "envs/rseqc_env.yaml"
     shell: "geneBody_coverage.py -i {input.bam} -r {input.ref_bed} -o qc/bam/{wildcards.library}"
 
 
