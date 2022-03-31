@@ -1,9 +1,18 @@
 name: BC_rna
 ---
 name: rnaseq_smk
-genome_fasta: /scratch/scratch-hdd/pkus/resources/rnaseq_files/gencode_mm_28/GRCm39.primary_assembly.genome.fa
+
+# mm28 - 149 (BCM)
+genome_fasta:    /scratch/scratch-hdd/pkus/resources/rnaseq_files/gencode_mm_28/GRCm39.primary_assembly.genome.fa
+rseqc_ref:       /scratch/scratch-hdd/pkus/resources/rnaseq_files/gencode_mm_28/mm28_RefSeq.bed
+gtf_file:        /scratch/scratch-hdd/pkus/resources/rnaseq_files/gencode_mm_28/gencode.vM28.primary_assembly.annotation.gtf
 star_genome_dir: /scratch/scratch-hdd/pkus/resources/star_genomes/gencode_mm_28_149
-rseqc_ref: /scratch/scratch-hdd/pkus/resources/rnaseq_files/gencode_mm_28/mm28_RefSeq.bed
-gtf_file: /scratch/scratch-hdd/pkus/resources/rnaseq_files/GRCh38.p13_gencode/gencode.v38.primary_assembly.annotation.gtf
 sjdbOverhang: 149
+
+# hs38 - 75 (BC)
+# genome_fasta: /scratch/scratch-hdd/pkus/resources/rnaseq_files/GRCh38.p13_gencode/GRCh38.primary_assembly.genome.fa
+# gtf_file: /scratch/scratch-hdd/pkus/resources/rnaseq_files/GRCh38.p13_gencode/gencode.v38.primary_assembly.annotation.gtf
+# star_genome_dir: /scratch/scratch-hdd/pkus/resources/star_genomes/gencode_GRCh38.p13_75
+# rseqc_ref: /scratch/scratch-hdd/pkus/resources/rseqc/hg38_RefSeq.chr.bed
+# sjdbOverhang: 75
 ...
