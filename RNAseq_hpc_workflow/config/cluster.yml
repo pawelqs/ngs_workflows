@@ -71,6 +71,11 @@ genebody_coverage_py:
     cpus: 4
     partition: phi
     output: outputs/genebody_coverage_py_%A.txt
+read_distribution_py:
+    job_name: read_distribution_py
+    cpus: 1
+    partition: phi
+    output: outputs/read_distribution_py_%A.txt
 samtools_stats:
     job_name: samtools_stats_py
     cpus: 4
