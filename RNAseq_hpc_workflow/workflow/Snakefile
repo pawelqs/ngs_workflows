@@ -215,6 +215,15 @@ rule genebody_coverage_py:
     shell: "geneBody_coverage.py -i {input.bam} -r {input.ref_bed} -o qc/bam/{wildcards.library}"
 
 
+rule read_distribution_py:
+    input:
+        bam = "bams/{library}.bam",
+        ref_bed = config["rseqc_ref"]
+    output: "qc/bam/{library}.read_distribution.txt"
+    conda: "envs/rseqc_env.yaml"
+    shell: "read_distribution.py -i {input.bam} -r {input.ref_bed} > qc/bam/{wildcards.library}.read_distribution.txt"
+
+
 rule samtools_stats:
     input: 
         bam = "bams/{library}.bam",
@@ -231,6 +240,7 @@ rule multiqc_3:
         tin_py = expand("qc/bam/{library}.tin.txt", library=lib_names),
         inner_distance = expand("qc/bam/{library}.inner_distance.txt", library=lib_names),
         geneBody_coverage = expand("qc/bam/{library}.geneBodyCoverage.txt", library=lib_names),
+        read_distribution = expand("qc/bam/{library}.read_distribution.txt", library=lib_names),
         samtools_stats = expand("qc/bam/{library}.samtools_stats", library=lib_names)
     output: "qc/bam.multiqc_report.html"
     params:
