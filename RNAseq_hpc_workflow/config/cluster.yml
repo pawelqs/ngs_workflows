@@ -81,10 +81,17 @@ samtools_stats:
     cpus: 4
     partition: phi
     output: outputs/samtools_stats_%A.txt
+multiqc_1:
+    job_name: multiqc_1
+    cpus: 4
+    output: outputs/multiqc_1_%A.txt
+multiqc_2:
+    job_name: multiqc_2
+    cpus: 4
+    output: outputs/multiqc_2_%A.txt
 multiqc_3:
     job_name: multiqc_3
     cpus: 4
-    partition: phi
     output: outputs/multiqc_3_%A.txt
 get_counts:
     job_name: get_counts
