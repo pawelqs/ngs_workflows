@@ -16,6 +16,10 @@ filter_avcf:
     output: outputs/filter_avcf_%A.txt
     cpus: 5
 # CNVkit
+cnvkit_access:
+    job_name: cnvkit
+    output: outputs/cnvkit_access_%A.txt
+    cpus: 1
 cnvkit_pipeline:
     job_name: cnvkit
     output: outputs/cnvkit_%A.txt
