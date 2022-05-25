@@ -11,8 +11,10 @@ sex = dict(zip(samples.sample_id, samples.sex))
 bams = dict(zip(samples.sample_id, samples.bam))
 tumor_samples = samples[samples.sample_type == "tumor"].sample_id.tolist()
 
-x = samples[samples.sample_type == "tumor"][["patient_id", "sample_id"]].rename(columns={"sample_id": "tumor_sample"})
-y = samples[samples.sample_type == "normal"][["patient_id", "sample_id"]].rename(columns={"sample_id": "normal_sample"})
+x = samples[samples.sample_type == "tumor"][["patient_id", "sample_id"]] \
+    .rename(columns={"sample_id": "tumor_sample"})
+y = samples[samples.sample_type == "normal"][["patient_id", "sample_id"]] \
+    .rename(columns={"sample_id": "normal_sample"})
 x = pd.merge(x, y, on = "patient_id")
 paired_normals = dict(zip(x.tumor_sample, x.normal_sample))
 
