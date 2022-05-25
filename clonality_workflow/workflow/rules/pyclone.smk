@@ -24,25 +24,25 @@ patient_pyclone = {patient: get_pyclone_info(patient) for patient in patients}
 
 rule pyclone_all:
     input:
-        expand(outdir + "/pyclone_facets/{patient}.table_{table}.tsv", patient=patients, table=["cluster", "loci"]),
-        expand(outdir + "/pyclone_facets/{patient}/tried.plot", patient=patients)
-        # expand(outdir + "/{patient}/table_{table}.tsv", patient=patients, table=pyclone_tables)
-        # expand(outdir + "/{patient}/clusters_{plot_type}.png", patient=patients, plot_type=pyclone_cluster_plots),
-        # expand(outdir + "/{patient}/loci_{plot_type}.png", patient=patients, plot_type=pyclone_loci_plots)
+        expand("pyclone_facets/{patient}.table_{table}.tsv", patient=patients, table=["cluster", "loci"]),
+        expand("pyclone_facets/{patient}/tried.plot", patient=patients)
+        # expand("{patient}/table_{table}.tsv", patient=patients, table=pyclone_tables)
+        # expand("{patient}/clusters_{plot_type}.png", patient=patients, plot_type=pyclone_cluster_plots),
+        # expand("{patient}/loci_{plot_type}.png", patient=patients, plot_type=pyclone_loci_plots)
 
 
 def pyclone_get_cnv_file(method, patient, sample):
     sample_id = "%s_%s" % (patient, sample)
     if method == "titan":
-        return outdir + "/titan_optimal/%s/%s.segs.tsv" % (sample_id, sample_id)
+        return "titan_optimal/%s/%s.segs.tsv" % (sample_id, sample_id)
     elif method == "facets":
-        return outdir + "/facets/%s.csv" % sample_id
+        return "facets/%s.csv" % sample_id
 
 rule pyclone_parse_tsv:
     input:
-        vcf = outdir + "/filtered_vcf/{patient}.vcf",
+        vcf = "filtered_vcf/{patient}.vcf",
         cnv = lambda wildcards: pyclone_get_cnv_file(wildcards.cnv_method, wildcards.patient, wildcards.sample)
-    output: outdir + "/pyclone_{cnv_method}/{patient}/input/{patient}_{sample}.tsv"
+    output: "pyclone_{cnv_method}/{patient}/input/{patient}_{sample}.tsv"
     params:
         sample_id = "{patient}_{sample}",
         sex = lambda wildcards: patient_pyclone[wildcards.patient]["sex"],
@@ -78,11 +78,11 @@ def pyclone_get_facets_purity(facets_out):
 
 rule pyclone_setup_facets:
     input: 
-        purity_files = lambda wildcards: [outdir + "/facets/%s.csv" % sample 
+        purity_files = lambda wildcards: ["facets/%s.csv" % sample 
             for sample in patient_pyclone[wildcards.patient]["tumor_samples"]],
-        tsv_files = lambda wildcards: [outdir + "/pyclone_facets/%s/input/%s.tsv" % (wildcards.patient, sample) 
+        tsv_files = lambda wildcards: ["pyclone_facets/%s/input/%s.tsv" % (wildcards.patient, sample) 
             for sample in patient_pyclone[wildcards.patient]["tumor_samples"]]
-    output: outdir + "/pyclone_facets/{patient}/input/samples_info.txt"
+    output: "pyclone_facets/{patient}/input/samples_info.txt"
     run:
         samples = patient_pyclone[wildcards.patient]["tumor_samples"]
         purities = [pyclone_get_facets_purity(str(facets_out)) for facets_out in input.purity_files]
@@ -103,11 +103,11 @@ def pyclone_get_titan_purity(params_file):
 
 rule pyclone_setup_titan:
     input: 
-        purity_files = lambda wildcards: [outdir + "/titan_optimal/%s/%s.params.txt" % (sample, sample) 
+        purity_files = lambda wildcards: ["titan_optimal/%s/%s.params.txt" % (sample, sample) 
             for sample in patient_pyclone[wildcards.patient]["tumor_samples"]],
-        tsv_files = lambda wildcards: [outdir + "/pyclone_titan/%s/input/%s.tsv" % (wildcards.patient, sample) 
+        tsv_files = lambda wildcards: ["pyclone_titan/%s/input/%s.tsv" % (wildcards.patient, sample) 
             for sample in patient_pyclone[wildcards.patient]["tumor_samples"]]
-    output: outdir + "/pyclone_titan/{patient}/input/samples_info.txt"
+    output: "pyclone_titan/{patient}/input/samples_info.txt"
     run:
         samples = patient_pyclone[wildcards.patient]["tumor_samples"]
         purities = [pyclone_get_titan_purity(str(pfile)) for pfile in input.purity_files]
@@ -115,8 +115,8 @@ rule pyclone_setup_titan:
 
 
 rule pyclone_setup_analysis:
-    input: outdir + "/pyclone_{cnv_method}/{patient}/input/samples_info.txt"
-    output: outdir + "/pyclone_{cnv_method}/{patient}/config.yaml"
+    input: "pyclone_{cnv_method}/{patient}/input/samples_info.txt"
+    output: "pyclone_{cnv_method}/{patient}/config.yaml"
     conda: "../envs/pyclone_env.yml"
     shell: 
         """
@@ -139,35 +139,35 @@ rule pyclone_setup_analysis:
 
 
 rule pyclone_run_analysis:
-    input: outdir + "/pyclone_{cnv_method}/{patient}/config.yaml"
-    output: outdir + "/pyclone_{cnv_method}/{patient}/trace/labels.tsv.bz2"
+    input: "pyclone_{cnv_method}/{patient}/config.yaml"
+    output: "pyclone_{cnv_method}/{patient}/trace/labels.tsv.bz2"
     conda: "../envs/pyclone_env.yml"
     shell: "PyClone run_analysis --config_file {input} --seed 4"
 
 
 rule pyclone_build_cluster_table:
     input: 
-        config = outdir + "/pyclone_{cnv_method}/{patient}/config.yaml",
-        labels = outdir + "/pyclone_{cnv_method}/{patient}/trace/labels.tsv.bz2"
-    output: outdir + "/pyclone_{cnv_method}/{patient}/table_cluster.tsv"
+        config = "pyclone_{cnv_method}/{patient}/config.yaml",
+        labels = "pyclone_{cnv_method}/{patient}/trace/labels.tsv.bz2"
+    output: "pyclone_{cnv_method}/{patient}/table_cluster.tsv"
     conda: "../envs/pyclone_env.yml"
     shell: "PyClone build_table --config_file {input.config} --out_file {output} --table_type cluster"
 
 
 rule pyclone_build_loci_table:
     input: 
-        config = outdir + "/pyclone_{cnv_method}/{patient}/config.yaml",
-        labels = outdir + "/pyclone_{cnv_method}/{patient}/trace/labels.tsv.bz2"
-    output: outdir + "/pyclone_{cnv_method}/{patient}/table_loci.tsv"
+        config = "pyclone_{cnv_method}/{patient}/config.yaml",
+        labels = "pyclone_{cnv_method}/{patient}/trace/labels.tsv.bz2"
+    output: "pyclone_{cnv_method}/{patient}/table_loci.tsv"
     conda: "../envs/pyclone_env.yml"
     shell: "PyClone build_table --config_file {input.config} --out_file {output} --table_type loci"
 
 
 rule pyclone_try_plot:
     input: 
-        config = outdir + "/pyclone_{cnv_method}/{patient}/config.yaml",
-        labels = outdir + "/pyclone_{cnv_method}/{patient}/trace/labels.tsv.bz2"
-    output: outdir + "/pyclone_{cnv_method}/{patient}/tried.plot"
+        config = "pyclone_{cnv_method}/{patient}/config.yaml",
+        labels = "pyclone_{cnv_method}/{patient}/trace/labels.tsv.bz2"
+    output: "pyclone_{cnv_method}/{patient}/tried.plot"
     params: 
         cluster_plots = pyclone_cluster_plots,
         loci_plots = pyclone_loci_plots
@@ -191,29 +191,29 @@ rule pyclone_try_plot:
 
 # rule pyclone_plot_clusters:
 #     input: 
-#         config = outdir + "/pyclone_{cnv_method}/{patient}/config.yaml",
-#         labels = outdir + "/pyclone_{cnv_method}/{patient}/trace/labels.tsv.bz2"
-#     output: outdir + "/pyclone_{cnv_method}/{patient}/clusters_{plot_type}.png"
+#         config = "pyclone_{cnv_method}/{patient}/config.yaml",
+#         labels = "pyclone_{cnv_method}/{patient}/trace/labels.tsv.bz2"
+#     output: "pyclone_{cnv_method}/{patient}/clusters_{plot_type}.png"
 #     conda: "../envs/pyclone_env.yml"
 #     shell: "PyClone plot_clusters --config_file {input.config} --plot_file {output} --plot_type {wildcards.plot_type}"
 
 
 # rule pyclone_plot_loci:
 #     input: 
-#         config = outdir + "/pyclone_{cnv_method}/{patient}/config.yaml",
-#         labels = outdir + "/pyclone_{cnv_method}/{patient}/trace/labels.tsv.bz2"
-#     output: outdir + "/pyclone_{cnv_method}/{patient}/loci_{plot_type}.png"
+#         config = "pyclone_{cnv_method}/{patient}/config.yaml",
+#         labels = "pyclone_{cnv_method}/{patient}/trace/labels.tsv.bz2"
+#     output: "pyclone_{cnv_method}/{patient}/loci_{plot_type}.png"
 #     conda: "../envs/pyclone_env.yml"
 #     shell: "PyClone plot_loci --config_file {input.config} --plot_file {output} --plot_type {wildcards.plot_type}"
 
 
 rule pyclone_copy_results:
     input: 
-        cluster_table = outdir + "/pyclone_{cnv_method}/{patient}/table_loci.tsv",
-        loci_table = outdir + "/pyclone_{cnv_method}/{patient}/table_cluster.tsv"
+        cluster_table = "pyclone_{cnv_method}/{patient}/table_loci.tsv",
+        loci_table = "pyclone_{cnv_method}/{patient}/table_cluster.tsv"
     output: 
-        cluster_table = outdir + "/pyclone_{cnv_method}/{patient}.table_loci.tsv",
-        loci_table = outdir + "/pyclone_{cnv_method}/{patient}.table_cluster.tsv"
+        cluster_table = "pyclone_{cnv_method}/{patient}.table_loci.tsv",
+        loci_table = "pyclone_{cnv_method}/{patient}.table_cluster.tsv"
     shell: 
         """
         cp {input.cluster_table} {output.cluster_table}

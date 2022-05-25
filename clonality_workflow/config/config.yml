@@ -1,5 +1,7 @@
 ---
 name: clonality
+outdir: /scratch/scratch-hdd/pkus/workflows_results/clonality/MK_OPUS_WES
+manifest: /scratch/scratch-hdd/pkus/data/MK_OPUS_WES/manifest.tsv
 
 genomeBuild: "hg38"
 

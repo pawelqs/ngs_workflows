@@ -15,15 +15,15 @@ patient_sciclone = {patient: get_sciclone_info(patient) for patient in patients}
 
 
 rule sciclone_all:
-    input: expand(outdir + "/sciclone_facets/{patient}.sciclone.tsv", patient = patients)
+    input: expand("sciclone_facets/{patient}.sciclone.tsv", patient = patients)
 
 
 rule run_sciclone_facets:
     input:
-        vcf = outdir + "/filtered_vcf/{patient}.vcf",
-        cnv = lambda wildcards: [outdir + "/facets/%s.csv" % sample
+        vcf = "filtered_vcf/{patient}.vcf",
+        cnv = lambda wildcards: ["facets/%s.csv" % sample
             for sample in patient_sciclone[wildcards.patient]["tumor_samples"]]
-    output: outdir + "/sciclone_facets/{patient}.sciclone.tsv"
+    output: "sciclone_facets/{patient}.sciclone.tsv"
     params:
         sample_names = lambda wildcards: patient_sciclone[wildcards.patient]["tumor_samples"]
     conda: "../envs/sciclone_env.yml"

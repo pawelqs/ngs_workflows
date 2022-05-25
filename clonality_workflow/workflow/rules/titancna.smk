@@ -14,35 +14,35 @@ TITAN_PLOIDY = {2:[2], 3:[2,3], 4:[2,3,4]}
 
 # rule all:
     # input: 
-        # expand(outdir + "/titan/hmm/titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.titan.txt",
+        # expand("titan/hmm/titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.titan.txt",
                # tumor = tumor_samples, 
                # clustNum = TITAN_CLUST[config["TitanCNA_maxNumClonalClusters"]], 
                # ploidy=TITAN_PLOIDY[config["TitanCNA_maxPloidy"]]),
-        # expand(outdir + "/titan/hmm/titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.titan.ichor.seg.txt",
+        # expand("titan/hmm/titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.titan.ichor.seg.txt",
                # tumor = tumor_samples, 
                # clustNum = TITAN_CLUST[config["TitanCNA_maxNumClonalClusters"]], 
                # ploidy = TITAN_PLOIDY[config["TitanCNA_maxPloidy"]]),
-        # expand(outdir + "/titan/hmm/titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.titan.ichor.cna.txt",
+        # expand("titan/hmm/titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.titan.ichor.cna.txt",
                # tumor = tumor_samples, 
                # clustNum = TITAN_CLUST[config["TitanCNA_maxNumClonalClusters"]], 
                # ploidy = TITAN_PLOIDY[config["TitanCNA_maxPloidy"]]),
-        # outdir + "/titan/hmm/optimalClusterSolution.txt",
-        # outdir + "/titan/hmm/optimalClusterSolution/"
+        # "titan/hmm/optimalClusterSolution.txt",
+        # "titan/hmm/optimalClusterSolution/"
 
 
 ### Give here 10 cpus!
 rule runTitanCNA:
     input:
-        alleleCounts = outdir + "/titan/tumCounts/{tumor}.tumCounts.txt",
-        corrDepth = outdir + "/ichorCNA/{tumor}/{tumor}.correctedDepth.txt"        
+        alleleCounts = "titan/tumCounts/{tumor}.tumCounts.txt",
+        corrDepth = "ichorCNA/{tumor}/{tumor}.correctedDepth.txt"        
     output:        
-        titan = outdir + "/titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.titan.txt",
-        param = outdir + "/titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.params.txt",
-        segTxt = outdir + "/titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.segs.txt",
-        seg = outdir + "/titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.seg"
+        titan = "titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.titan.txt",
+        param = "titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.params.txt",
+        segTxt = "titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.segs.txt",
+        seg = "titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.seg"
     conda: "../envs/titancna_env.yml"
     params:
-        outRoot = outdir + "/titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}/",
+        outRoot = "titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}/",
         titanRscript = config["TitanCNA_rscript"],
         libdir = config["TitanCNA_libdir"],
         numCores = config["TitanCNA_numCores"],
@@ -97,15 +97,15 @@ rule runTitanCNA:
 
 rule combineTitanAndIchorCNA:
     input:
-        titanSeg = outdir + "/titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.segs.txt", 
-        titanBin = outdir + "/titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.titan.txt",
-        titanParam = outdir + "/titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.params.txt",
-        ichorSeg = outdir + "/ichorCNA/{tumor}/{tumor}.seg.txt",
-        ichorBin = outdir + "/ichorCNA/{tumor}/{tumor}.cna.seg",
-        ichorParam = outdir + "/ichorCNA/{tumor}/{tumor}.params.txt"
+        titanSeg = "titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.segs.txt", 
+        titanBin = "titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.titan.txt",
+        titanParam = "titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.params.txt",
+        ichorSeg = "ichorCNA/{tumor}/{tumor}.seg.txt",
+        ichorBin = "ichorCNA/{tumor}/{tumor}.cna.seg",
+        ichorParam = "ichorCNA/{tumor}/{tumor}.params.txt"
     output:
-        segFile = outdir + "/titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.titan.ichor.seg.txt",
-        binFile = outdir + "/titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.titan.ichor.cna.txt",
+        segFile = "titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.titan.ichor.seg.txt",
+        binFile = "titan/{tumor}/hmm.titanCNA_ploidy{ploidy}/{tumor}_cluster{clustNum}.titan.ichor.cna.txt",
     conda: "../envs/titancna_env.yml"
     params:
         combineScript = config["TitanCNA_combineTitanIchorCNA"],
@@ -135,12 +135,12 @@ rule combineTitanAndIchorCNA:
 
 rule selectSolution:
     input:
-        #ploidyDirs=expand(outdir + "/titan/hmm/titanCNA_ploidy{ploidy}/", ploidy=TITAN_PLOIDY[config["TitanCNA_maxPloidy"]]),
-        resultFiles=expand(outdir + "/titan/{{tumor}}/hmm.titanCNA_ploidy{ploidy}/{{tumor}}_cluster{clustNum}.titan.txt", 
+        #ploidyDirs=expand("titan/hmm/titanCNA_ploidy{ploidy}/", ploidy=TITAN_PLOIDY[config["TitanCNA_maxPloidy"]]),
+        resultFiles=expand("titan/{{tumor}}/hmm.titanCNA_ploidy{ploidy}/{{tumor}}_cluster{clustNum}.titan.txt", 
                            #tumor = tumor_samples, 
                            clustNum = TITAN_CLUST[config["TitanCNA_maxNumClonalClusters"]], 
                            ploidy = TITAN_PLOIDY[config["TitanCNA_maxPloidy"]])
-    output: outdir + "/titan/{tumor}/optimalClusterSolution.txt"
+    output: "titan/{tumor}/optimalClusterSolution.txt"
     conda: "../envs/titancna_env.yml"
     params:
         solutionRscript = config["TitanCNA_selectSolutionRscript"],
@@ -170,12 +170,12 @@ rule selectSolution:
 
 
 rule copyOptSolution:
-    input: outdir + "/titan/{tumor}/optimalClusterSolution.txt"
+    input: "titan/{tumor}/optimalClusterSolution.txt"
     output: 
-        segs = outdir + "/titan_optimal/{tumor}/{tumor}.segs.txt",
-        params = outdir + "/titan_optimal/{tumor}/{tumor}.params.txt",
+        segs = "titan_optimal/{tumor}/{tumor}.segs.txt",
+        params = "titan_optimal/{tumor}/{tumor}.params.txt",
     params:
-        out_dir = outdir + "/titan_optimal/{tumor}"
+        out_dir = "titan_optimal/{tumor}"
     log: "outputs/titan.{tumor}.copyOptSolution.log"
     shell:
         """
@@ -195,8 +195,8 @@ rule copyOptSolution:
 
 
 rule titan_clear_segfile:
-    input: outdir + "/titan_optimal/{sample}/{sample}.segs.txt"
-    output: outdir + "/titan_optimal/{sample}/{sample}.segs.tsv"
+    input: "titan_optimal/{sample}/{sample}.segs.txt"
+    output: "titan_optimal/{sample}/{sample}.segs.tsv"
     run:
         cnv = pd.read_csv(str(input), sep = "\t", dtype = str)
         cnv = cnv.rename(columns={
@@ -222,14 +222,14 @@ CHRS = ['chr1','chr2','chr3','chr4','chr5','chr6','chr7','chr8','chr9','chr10','
 
 # rule tumCounts:
     # input: 
-        # expand(outdir + "/titan/tumCounts/{tumor}/{tumor}.tumCounts.chr{chr}.txt", tumor=config["pairings"], chr=CHRS),        
-        # expand(outdir + "/titan/tumCounts/{tumor}.tumCounts.txt", tumor=config["pairings"])
+        # expand("titan/tumCounts/{tumor}/{tumor}.tumCounts.chr{chr}.txt", tumor=config["pairings"], chr=CHRS),        
+        # expand("titan/tumCounts/{tumor}.tumCounts.txt", tumor=config["pairings"])
 
 
 rule getHETsites:
     #input: lambda wildcards: config["samples"][config["pairings"][wildcards.tumor]]
     input: lambda wildcards: bams[paired_normals[wildcards.tumor]]
-    output: outdir + "/titan/hetPosns/{tumor}/{tumor}.chr{chr}.vcf"
+    output: "titan/hetPosns/{tumor}/{tumor}.chr{chr}.vcf"
     params:
         refFasta = config["refFasta"],
         snpDB = config["snpVCF"],
@@ -248,10 +248,10 @@ rule getHETsites:
 
 rule getAlleleCountsByChr:
     input:
-        hetSites = outdir + "/titan/hetPosns/{tumor}/{tumor}.chr{chr}.vcf",
+        hetSites = "titan/hetPosns/{tumor}/{tumor}.chr{chr}.vcf",
         #tumBam=lambda wildcards: config["samples"][wildcards.tumor]
         tumBam = lambda wildcards: bams[wildcards.tumor]
-    output: outdir + "/titan/tumCounts/{tumor}/{tumor}.tumCounts.chr{chr}.txt"
+    output: "titan/tumCounts/{tumor}/{tumor}.tumCounts.chr{chr}.txt"
     params:
         countScript = config["pyCountScript"],
         #pyEnv=config["pyEnv"],
@@ -265,8 +265,8 @@ rule getAlleleCountsByChr:
 
 
 rule catAlleleCountFiles:
-    input: expand(outdir + "/titan/tumCounts/{{tumor}}/{{tumor}}.tumCounts.chr{chr}.txt", chr=CHRS)
-    output: outdir + "/titan/tumCounts/{tumor}.tumCounts.txt"
+    input: expand("titan/tumCounts/{{tumor}}/{{tumor}}.tumCounts.chr{chr}.txt", chr=CHRS)
+    output: "titan/tumCounts/{tumor}.tumCounts.txt"
     log: "outputs/titan.tumCounts.{tumor}.cat.log"
     shell: "cat {input} | grep -v Chr > {output} 2> {log}"
         
@@ -277,11 +277,11 @@ rule catAlleleCountFiles:
 
 # rule correct_depth:
     # input:
-        # expand(outdir + "/ichorCNA/{tumor}/{tumor}.cna.seg", tumor=tumor_samples),
-        # expand(outdir + "/ichorCNA/{tumor}/{tumor}.seg.txt", tumor=tumor_samples),
-        # expand(outdir + "/ichorCNA/{tumor}/{tumor}.params.txt", tumor=tumor_samples),
-        # expand(outdir + "/ichorCNA/{tumor}/{tumor}.correctedDepth.txt", tumor=tumor_samples),
-        # expand(outdir + "/readDepth/{sample}.bin{binSize}.wig", sample=samples.sample_id, binSize=str(config["binSize"]))
+        # expand("ichorCNA/{tumor}/{tumor}.cna.seg", tumor=tumor_samples),
+        # expand("ichorCNA/{tumor}/{tumor}.seg.txt", tumor=tumor_samples),
+        # expand("ichorCNA/{tumor}/{tumor}.params.txt", tumor=tumor_samples),
+        # expand("ichorCNA/{tumor}/{tumor}.correctedDepth.txt", tumor=tumor_samples),
+        # expand("readDepth/{sample}.bin{binSize}.wig", sample=samples.sample_id, binSize=str(config["binSize"]))
 
 
 rule read_counter:
@@ -289,14 +289,14 @@ rule read_counter:
         #bam = lambda wildcards: config["samples"][wildcards.samples]
         bam = lambda wildcards: bams[wildcards.sample],
         bai = lambda wildcards: "%s.bai" % bams[wildcards.sample]
-    output: outdir + "/readDepth/{sample}.bin{binSize}.wig"
+    output: "readDepth/{sample}.bin{binSize}.wig"
     conda: "../envs/titancna_env.yml"        
     params:
         readCounter = config["readCounterScript"],
         binSize = config["binSize"],
         qual = "20",
         chrs = config["chrs"],
-        out_dir = outdir + "/readDepth"
+        out_dir = "readDepth"
     resources:
         mem = 4
     log: "outputs/readDepth.{sample}.bin{binSize}.log"
@@ -309,20 +309,20 @@ rule read_counter:
 
 rule ichorCNA:
     input:
-        # tum = outdir + "/readDepth/{tumor}.bin" + str(config["binSize"]) + ".wig",
-        # norm = lambda wildcards: outdir + "/readDepth/" + config["pairings"][wildcards.tumor] + ".bin" + str(config["binSize"]) + ".wig"
-        tum = outdir + "/readDepth/{tumor}.bin" + str(config["binSize"]) + ".wig",
-        norm = lambda wildcards: outdir + "/readDepth/" + paired_normals[wildcards.tumor] + ".bin" + str(config["binSize"]) + ".wig"
+        # tum = "readDepth/{tumor}.bin" + str(config["binSize"]) + ".wig",
+        # norm = lambda wildcards: "readDepth/" + config["pairings"][wildcards.tumor] + ".bin" + str(config["binSize"]) + ".wig"
+        tum = "readDepth/{tumor}.bin" + str(config["binSize"]) + ".wig",
+        norm = lambda wildcards: "readDepth/" + paired_normals[wildcards.tumor] + ".bin" + str(config["binSize"]) + ".wig"
     output:
-        corrDepth = outdir + "/ichorCNA/{tumor}/{tumor}.correctedDepth.txt",
-        param = outdir + "/ichorCNA/{tumor}/{tumor}.params.txt",
-        cna = outdir + "/ichorCNA/{tumor}/{tumor}.cna.seg",
-        segTxt = outdir + "/ichorCNA/{tumor}/{tumor}.seg.txt",
-        #seg = outdir + "/ichorCNA/{tumor}/{tumor}.seg",
-        #rdata = outdir + "/ichorCNA/{tumor}/{tumor}.RData"
+        corrDepth = "ichorCNA/{tumor}/{tumor}.correctedDepth.txt",
+        param = "ichorCNA/{tumor}/{tumor}.params.txt",
+        cna = "ichorCNA/{tumor}/{tumor}.cna.seg",
+        segTxt = "ichorCNA/{tumor}/{tumor}.seg.txt",
+        #seg = "ichorCNA/{tumor}/{tumor}.seg",
+        #rdata = "ichorCNA/{tumor}/{tumor}.RData"
     conda: "../envs/titancna_env.yml"
     params:
-        outDir = outdir + "/ichorCNA/{tumor}/",
+        outDir = "ichorCNA/{tumor}/",
         rscript = config["ichorCNA_rscript"],
         libdir = config["ichorCNA_libdir"],
         id = "{tumor}",
