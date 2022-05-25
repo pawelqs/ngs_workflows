@@ -1,7 +1,7 @@
 import pandas as pd
 import glob
 
-workdir: config["outdir"]
+workdir: config["workdir"]
 
 samples = pd.read_csv(config["manifest"], sep = "\t")
 patients = samples.patient_id.unique().tolist()
