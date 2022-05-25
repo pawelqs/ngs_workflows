@@ -5,6 +5,7 @@ workdir: config["workdir"]
 
 samples = pd.read_csv(config["manifest"], sep = "\t")
 patients = samples.patient_id.unique().tolist()
+patients_known_sex = samples.dropna().patient_id.unique().tolist()
 
 sex = dict(zip(samples.sample_id, samples.sex))
 bams = dict(zip(samples.sample_id, samples.bam))
@@ -18,6 +19,7 @@ x = pd.merge(x, y, on = "patient_id")
 paired_normals = dict(zip(x.tumor_sample, x.normal_sample))
 
 
+include: "rules/cnvkit.smk"
 include: "rules/titancna.smk"
 include: "rules/facets.smk"
 include: "rules/phylowgs.smk"
@@ -26,7 +28,8 @@ include: "rules/pyclone.smk"
 
 rule all:
     input:
-        # expand("{bam}.bai", bam=samples.bam.tolist()),
+        expand("{bam}.bai", bam=samples.bam.tolist()),
+        expand("cnvkit/{patient}/done", patient=patients_known_sex),
         expand("facets/{sample}.csv", sample=tumor_samples),
         # expand("titan_optimal/{sample}/{sample}.segs.tsv", sample=tumor_samples),
         # expand("phylowgs_{cnv_method}/{patient}.Rds", cnv_method=["titan", "facets"], patient = patients),
