@@ -19,20 +19,20 @@ file_types = ["mutass.zip", "muts.json.gz", "summ.json.gz"]
 
 rule phylowgs_all:
     input: 
-        expand("results/phylowgs_{cnv_method}/{patient}.Rds", cnv_method=["titan", "facets"], patient = patients)
-        # expand("results/phylowgs_{cnv_method}/{patient}.{file_type}", 
+        expand(outdir + "/phylowgs_{cnv_method}/{patient}.Rds", cnv_method=["titan", "facets"], patient = patients)
+        # expand(outdir + "/phylowgs_{cnv_method}/{patient}.{file_type}", 
         #        cnv_method=["titan", "facets"], patient = patients, file_type = file_types),
-        # expand("results/phylowgs_{cnv_method}/{patient}/trees.zip", cnv_method=["titan", "facets"], patient=patients)
+        # expand(outdir + "/phylowgs_{cnv_method}/{patient}/trees.zip", cnv_method=["titan", "facets"], patient=patients)
         # Only parse the files, stop before the multievolve:
-        # expand("results/phylowgs_input/{patient}.{cnv_method}.params.json", patient=patients, cnv_method=["titan", "facets"])
+        # expand(outdir + "/phylowgs_input/{patient}.{cnv_method}.params.json", patient=patients, cnv_method=["titan", "facets"])
 
 
 rule prepare_avcf:
-    input: "results/filtered_vcf/{patient}.vcf"
-    output: "results/phylowgs_input/{patient}_{sample}.vcf"
+    input: outdir + "/filtered_vcf/{patient}.vcf"
+    output: outdir + "/phylowgs_input/{patient}_{sample}.vcf"
     params:
         vcf_col = "{patient}_{sample}",
-        temp_vcf = "results/phylowgs_input/{patient}_{sample}.temp.vcf",
+        temp_vcf = outdir + "/phylowgs_input/{patient}_{sample}.temp.vcf",
     shell: 
         """
         gatk SelectVariants \\
@@ -46,8 +46,8 @@ rule prepare_avcf:
 
 
 rule parse_facets:
-    input: "results/facets/{sample}.csv"
-    output: "results/phylowgs_input/{sample}.cnvs.facets.txt"
+    input: outdir + "/facets/{sample}.csv"
+    output: outdir + "/phylowgs_input/{sample}.cnvs.facets.txt"
     run:
         df = pd.read_csv(str(input))
         purity = df.loc[1, "Purity"]
@@ -63,9 +63,9 @@ rule parse_facets:
 
 rule parse_titan:
     input: 
-        segments = "results/titan_optimal/{sample}/{sample}.segs.tsv",
-        params = "results/titan_optimal/{sample}/{sample}.params.txt"
-    output: "results/phylowgs_input/{sample}.cnvs.titan.txt"
+        segments = outdir + "/titan_optimal/{sample}/{sample}.segs.tsv",
+        params = outdir + "/titan_optimal/{sample}/{sample}.params.txt"
+    output: outdir + "/phylowgs_input/{sample}.cnvs.titan.txt"
     run:
         params = open(str(input.params)).read().split("\n")
         normal_cont_line = [line for line in params if "Normal contamination estimate" in line]
@@ -84,18 +84,18 @@ rule parse_titan:
 
 rule pwgs_create_inputs:
     input:
-        vcfs = lambda wildcards: ["results/phylowgs_input/%s.vcf" % sid 
+        vcfs = lambda wildcards: [outdir + "/phylowgs_input/%s.vcf" % sid 
                                   for sid in patient_pwgs[wildcards.patient]["tumor_samples"]],
-        cnvs = lambda wildcards: ["results/phylowgs_input/%s.cnvs.%s.txt" % (sample_id, wildcards.cnv_method) 
+        cnvs = lambda wildcards: [outdir + "/phylowgs_input/%s.cnvs.%s.txt" % (sample_id, wildcards.cnv_method) 
                                   for sample_id in patient_pwgs[wildcards.patient]["tumor_samples"]]
     output:
-        ssms = "results/phylowgs_input/{patient}.{cnv_method}.ssm_data.txt",
-        cnvs = "results/phylowgs_input/{patient}.{cnv_method}.cnv_data.txt",
-        json = "results/phylowgs_input/{patient}.{cnv_method}.params.json"
+        ssms = outdir + "/phylowgs_input/{patient}.{cnv_method}.ssm_data.txt",
+        cnvs = outdir + "/phylowgs_input/{patient}.{cnv_method}.cnv_data.txt",
+        json = outdir + "/phylowgs_input/{patient}.{cnv_method}.params.json"
     params:
         samples = lambda wildcards: patient_pwgs[wildcards.patient]["tumor_samples"],
         sex = lambda wildcards: patient_pwgs[wildcards.patient]["sex"],           # "male" / "female"
-        out_dir = "results/{patient}/",
+        out_dir = outdir + "/{patient}/",
         cnvs = lambda wildcards, input: "".join(["--cnvs %s=%s " % (sample, cnv_file) 
                                         for sample, cnv_file 
                                         in zip(patient_pwgs[wildcards.patient]["tumor_samples"], input.cnvs)]),
@@ -120,12 +120,12 @@ rule pwgs_create_inputs:
 
 rule pwgs_multievolve:
     input:
-        ssms = "results/phylowgs_input/{patient}.{cnv_method}.ssm_data.txt",
-        cnvs = "results/phylowgs_input/{patient}.{cnv_method}.cnv_data.txt"
-    output: "results/phylowgs_{cnv_method}/{patient}/trees.zip"
+        ssms = outdir + "/phylowgs_input/{patient}.{cnv_method}.ssm_data.txt",
+        cnvs = outdir + "/phylowgs_input/{patient}.{cnv_method}.cnv_data.txt"
+    output: outdir + "/phylowgs_{cnv_method}/{patient}/trees.zip"
     threads: 20
     params:
-        out_dir = "results/phylowgs_{cnv_method}/{patient}"
+        out_dir = outdir + "/phylowgs_{cnv_method}/{patient}"
     conda: "../envs/phylowgs_env.yml"
     shell: 
         """
@@ -137,13 +137,13 @@ rule pwgs_multievolve:
 
 
 rule pwgs_write_results:
-    input: "results/phylowgs_{cnv_method}/{patient}/trees.zip"
+    input: outdir + "/phylowgs_{cnv_method}/{patient}/trees.zip"
     output:
-        mutass = "results/phylowgs_{cnv_method}/{patient}.mutass.zip",
-        muts_gz = "results/phylowgs_{cnv_method}/{patient}.muts.json.gz",
-        summ_gz = "results/phylowgs_{cnv_method}/{patient}.summ.json.gz",
-        muts = "results/phylowgs_{cnv_method}/{patient}.muts.json",
-        summ = "results/phylowgs_{cnv_method}/{patient}.summ.json"
+        mutass = outdir + "/phylowgs_{cnv_method}/{patient}.mutass.zip",
+        muts_gz = outdir + "/phylowgs_{cnv_method}/{patient}.muts.json.gz",
+        summ_gz = outdir + "/phylowgs_{cnv_method}/{patient}.summ.json.gz",
+        muts = outdir + "/phylowgs_{cnv_method}/{patient}.muts.json",
+        summ = outdir + "/phylowgs_{cnv_method}/{patient}.summ.json"
     conda: "../envs/phylowgs_env.yml"
     shell: 
         """
@@ -158,17 +158,17 @@ rule pwgs_write_results:
 
 rule pwgs_extract_best_result:
     input:
-        mutass = "results/phylowgs_{cnv_method}/{patient}.mutass.zip",
-        muts = "results/phylowgs_{cnv_method}/{patient}.muts.json",
-        summ = "results/phylowgs_{cnv_method}/{patient}.summ.json"
+        mutass = outdir + "/phylowgs_{cnv_method}/{patient}.mutass.zip",
+        muts = outdir + "/phylowgs_{cnv_method}/{patient}.muts.json",
+        summ = outdir + "/phylowgs_{cnv_method}/{patient}.summ.json"
     output:
-        rds_file = "results/phylowgs_{cnv_method}/{patient}.Rds",
-        tree_file = "results/phylowgs_{cnv_method}/{patient}.tree.tsv",
-        clusters_file = "results/phylowgs_{cnv_method}/{patient}.clusters.tsv",
-        mutations_file = "results/phylowgs_{cnv_method}/{patient}.mutations.tsv"
+        rds_file = outdir + "/phylowgs_{cnv_method}/{patient}.Rds",
+        tree_file = outdir + "/phylowgs_{cnv_method}/{patient}.tree.tsv",
+        clusters_file = outdir + "/phylowgs_{cnv_method}/{patient}.clusters.tsv",
+        mutations_file = outdir + "/phylowgs_{cnv_method}/{patient}.mutations.tsv"
     conda: "../envs/genomicR_env.yml"
     params:
-        out_dir = "results/phylowgs_{cnv_method}",
+        out_dir = outdir + "/phylowgs_{cnv_method}",
         prefix = "{patient}"
     shell:
         """

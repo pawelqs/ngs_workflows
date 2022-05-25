@@ -1,12 +1,12 @@
 rule facets_all:
-    input: expand("results/facets/{sample}.csv", sample=tumor_samples)
+    input: expand(outdir + "/facets/{sample}.csv", sample=tumor_samples)
 
 
 rule snp_pile:
     input:
         tumor = lambda wildcards: bams[wildcards.sample],
         normal = lambda wildcards: bams[paired_normals[wildcards.sample]]
-    output: "results/facets/{sample}.pileup.csv.gz"
+    output: outdir + "/facets/{sample}.pileup.csv.gz"
     params:
         snps = config["FACETS_snp_vcf"]
     threads: 10
@@ -14,10 +14,10 @@ rule snp_pile:
 
 
 rule facets:
-    input: "results/facets/{sample}.pileup.csv.gz"
-    output: "results/facets/{sample}.0csv"
+    input: outdir + "/facets/{sample}.pileup.csv.gz"
+    output: outdir + "/facets/{sample}.0csv"
     params:
-        outdir = "results/facets/",
+        outdir = outdir + "/facets/",
         nhet = 15,
         sample_name = "{sample}"
     conda: "../envs/facets_env.yaml"
@@ -27,6 +27,6 @@ rule facets:
 
     
 rule facets_rep_chrom_names:
-    input: "results/facets/{sample}.0csv"
-    output: "results/facets/{sample}.csv"
+    input: outdir + "/facets/{sample}.0csv"
+    output: outdir + "/facets/{sample}.csv"
     shell: "sed 's/^23/X/' {input} | sed 's/^24/Y/' > {output}"

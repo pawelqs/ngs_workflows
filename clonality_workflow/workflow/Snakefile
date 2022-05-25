@@ -1,13 +1,11 @@
 import pandas as pd
 import glob
 
-configfile: "config/config.yml"
+
+outdir = config["outdir"]
 
 samples = pd.read_csv("samples.tsv", sep = "\t")
 patients = samples.patient_id.unique().tolist()
-# patients = [
-#     "AMLRO_1", "AMLRO_2", "AMLRO_3", "AMLRO_4", "AMLRO_8", "AMLRO_9", #  "AMLRO_6",  
-#     "AMLRO_10", "AMLRO_11", "AMLRO_12", "AMLRO_15"]
 
 sex = dict(zip(samples.sample_id, samples.sex))
 bams = dict(zip(samples.sample_id, samples.bam))
@@ -28,11 +26,11 @@ include: "rules/pyclone.smk"
 rule all:
     input:
         # expand("{bam}.bai", bam=samples.bam.tolist()),
-        expand("results/facets/{sample}.csv", sample=tumor_samples),
-        expand("results/titan_optimal/{sample}/{sample}.segs.tsv", sample=tumor_samples),
-        expand("results/phylowgs_{cnv_method}/{patient}.Rds", cnv_method=["titan", "facets"], patient = patients),
-        expand("results/pyclone_{cnv_method}/{patient}.table_{table}.tsv", cnv_method=["titan", "facets"], patient=patients, table=["cluster", "loci"]),
-        expand("results/pyclone_{cnv_method}/{patient}/tried.plot", cnv_method=["titan", "facets"], patient=patients)
+        expand(outdir + "/facets/{sample}.csv", sample=tumor_samples),
+        expand(outdir + "/titan_optimal/{sample}/{sample}.segs.tsv", sample=tumor_samples),
+        expand(outdir + "/phylowgs_{cnv_method}/{patient}.Rds", cnv_method=["titan", "facets"], patient = patients),
+        expand(outdir + "/pyclone_{cnv_method}/{patient}.table_{table}.tsv", cnv_method=["titan", "facets"], patient=patients, table=["cluster", "loci"]),
+        expand(outdir + "/pyclone_{cnv_method}/{patient}/tried.plot", cnv_method=["titan", "facets"], patient=patients)
 
 
 rule index_bam:
@@ -47,9 +45,9 @@ mutect_files = dict(zip(mutect_files.patient_id, mutect_files.mutect2))
 # To check how many mutations will be kept for certain options, workflow/scripts/sim_vcf_filtering.sh may be used
 rule filter_avcf:
     input: lambda wildcards: mutect_files[wildcards.patient]
-    output: "results/filtered_vcf/{patient}.vcf"
+    output: outdir + "/filtered_vcf/{patient}.vcf"
     params:
-        temp_vcf = "results/filtered_vcf/{patient}.temp.vcf",
+        temp_vcf = outdir + "/filtered_vcf/{patient}.temp.vcf",
         tumor_samples = lambda wildcards: ",".join(patient_pwgs[wildcards.patient]["tumor_samples"])
     shell:
         """
