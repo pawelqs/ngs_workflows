@@ -1,0 +1,22 @@
+name: sciclone_env
+channels:
+  - conda-forge
+  - bioconda
+  - r
+  - aroth85
+dependencies:
+  # dont uncomment, causes errors. It will be installed anyway
+  # - bioconductor-iranges
+  # - r-rgl
+  # - r-rcolorbrewer
+  # - r-ggplot2
+  # - r-gridgraphics
+  # - r-plotrix
+  # - r-teachingdemos
+  # - r-mkmisc
+  - r-tidyverse
+  - bioconductor-plyranges
+  - r-vcfr
+  - r-bmm
+  - r-sciclone
+prefix: /home/pkus/programs/anaconda3/envs/sciclone_env

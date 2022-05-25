@@ -1,0 +1,8 @@
+name: cnvkit_env
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - cnvkit
+prefix: /home/pkus/programs/anaconda3/envs/cnvkit_env

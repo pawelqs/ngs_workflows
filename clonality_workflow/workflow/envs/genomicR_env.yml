@@ -1,0 +1,13 @@
+name: genomicR_env
+channels:
+  - conda-forge
+  - bioconda
+  - r
+dependencies:
+  - r-tidyverse
+  - r-yaml
+  - r-vcfr
+  - r-jsonlite
+  - r-optparse
+  - bioconductor-plyranges
+prefix: /home/pkus/programs/anaconda3/envs/genomicR_env

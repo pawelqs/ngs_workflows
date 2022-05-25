@@ -1,0 +1,17 @@
+name: titancna_env
+channels:
+  - conda-forge
+  - bioconda
+  - r
+  - dranew
+  - defaults
+dependencies:
+  - bioconductor-titancna
+  - bioconductor-snpchip
+  - bioconductor-bsgenome.hsapiens.ucsc.hg19
+  - r-ichorcna
+  - r-domc
+  - hmmcopy_utils
+  - pysam # I am not sure if necessary
+  - r-ff=2.2.14 # I am not sure if necessary
+prefix: /home/pkus/programs/anaconda3/envs/titancna_env

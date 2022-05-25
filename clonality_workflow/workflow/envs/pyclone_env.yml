@@ -1,0 +1,7 @@
+name: pyclone_env
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - pyclone

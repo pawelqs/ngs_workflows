@@ -1,0 +1,9 @@
+name: phylowgs_env
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python=2.7
+  - phylowgs
+prefix: /home/pkus/programs/anaconda3/envs/phylowgs_env
