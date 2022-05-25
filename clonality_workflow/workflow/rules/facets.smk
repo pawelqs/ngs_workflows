@@ -9,7 +9,6 @@ rule snp_pile:
     output: "facets/{sample}.pileup.csv.gz"
     params:
         snps = config["FACETS_snp_vcf"]
-    threads: 10
     shell: "snp-pileup -g -q10 -Q10 -P100 -r25,0 -d10000 {params.snps} {output} {input.normal} {input.tumor}"
 
 

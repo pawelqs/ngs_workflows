@@ -1,7 +1,5 @@
 ---
 jobs: 100
-#xcluster: "sbatch -p high -t {resources.time_min} --mem={resources.mem_mb} -c {resources.cpus} -o logs_slurm/{rule}_{wildcards} -e logs_slurm/{rule}_{wildcards} --mail-type=FAIL --mail-user=user@mail.com"
-#ycluster: "sbatch -A {cluster.account} --mem={cluster.mem} --time={cluster.time} --cpus-per-task={cluster.cpus} --partition={cluster.partition} --job-name={cluster.job_name} --output={cluster.output}"
 cluster:
   mkdir -p slurm_logs/{rule} &&
   sbatch 
@@ -12,11 +10,12 @@ cluster:
     --output=slurm_logs/{rule}/{wildcards}.out
     --error=slurm_logs/{rule}/{wildcards}.err
     --job-name={rule}_{wildcards}
-    --partition=phi
+    --partition={resources.partition}
 default-resources: 
   - cpus=1
   - mem="10G"
   - time="200:0:0"
+  - partition="phi"
 use-conda: true
 conda-frontend: conda
 keep-going: true
