@@ -1,170 +1,94 @@
 __default__:
-    account: pkus
-    job_name: snake_job
-    mem: 10G
-    time: "200:0:0"
-    cpus: 1
-    output: outputs/slurm_%A.txt
     partition: extuser
 index_bam:
-    job_name: index_bam
-    output: outputs/index_bam_%A.txt
     partition: phi
-    cpus: 10
 filter_avcf:
-    job_name: filter_avcf
-    output: outputs/filter_avcf_%A.txt
     cpus: 5
 # CNVkit
 cnvkit_access:
-    job_name: cnvkit
-    output: outputs/cnvkit_access_%A.txt
     cpus: 1
 cnvkit_pipeline:
-    job_name: cnvkit
-    output: outputs/cnvkit_%A.txt
     partition: phi
     cpus: 10
 # FACETS
 snp_pile:
-    job_name: snp_pile
-    output: outputs/snp_pile_%A.txt
     cpus: 5
 facets:
-    job_name: facets
-    output: outputs/facets_%A.txt
     cpus: 5
     partition: phi
 # TitanCNA
 correct_depth:
-    job_name: correct_depth
-    output: outputs/correct_depth_%A.txt
     cpus: 5
     partition: phi
 read_counter:
-    job_name: read_counter
-    output: outputs/read_counter_%A.txt
     cpus: 5
     partition: phi
 ichorCNA:
-    job_name: ichorCNA
-    output: outputs/ichorCNA_%A.txt
     cpus: 5
     partition: phi
 getHETsites:
-    job_name: getHETsites
-    output: outputs/getHETsites_%A.txt
     cpus: 5
     partition: phi
 getAlleleCountsByChr:
-    job_name: getAlleleCountsByChr
-    output: outputs/getAlleleCountsByChr_%A.txt
     cpus: 5
     partition: phi
 catAlleleCountFiles:
-    job_name: catAlleleCountFiles
-    output: outputs/catAlleleCountFiles_%A.txt
     cpus: 5
     partition: phi
 runTitanCNA:
-    job_name: runTitanCNA
-    output: outputs/runTitanCNA_%A.txt
     cpus: 5
     partition: phi
 combineTitanAndIchorCNA:
-    job_name: combineTitanAndIchorCNA
-    output: outputs/combineTitanAndIchorCNA_%A.txt
     cpus: 5
     partition: phi
 selectSolution:
-    job_name: selectSolution
-    output: outputs/selectSolution_%A.txt
     cpus: 5
     partition: phi
 copyOptSolution:
-    job_name: copyOptSolution
-    output: outputs/copyOptSolution_%A.txt
     cpus: 5
     partition: phi
 titan_clear_segfile:
-    job_name: titan_clear_segfile
-    output: outputs/titan_clear_segfile_%A.txt
     cpus: 5
     partition: phi
 # phyloWGS
 prepare_avcf:
-    job_name: prepare_avcf
-    output: outputs/prepare_avcf_%A.txt
     cpus: 5
 parse_facets:
-    job_name: parse_facets
-    output: outputs/parse_facets_%A.txt
     cpus: 5
 parse_titan:
-    job_name: parse_titan
-    output: outputs/parse_titan_%A.txt
     cpus: 5
 pwgs_create_inputs:
-    job_name: pwgs_create_inputs
-    output: outputs/pwgs_create_inputs_%A.txt
     cpus: 5
 pwgs_multievolve:
-    job_name: pwgs_multievolve
-    output: outputs/pwgs_multievolve_%A.txt
     partition: phi
     cpus: 20
 pwgs_write_results:
-    job_name: pwgs_write_results
-    output: outputs/pwgs_write_results_%A.txt
     partition: phi
     cpus: 5
-pwgs_extract_best_result:
-    job_name: pwgs_extract_best_result
-    output: outputs/pwgs_extract_best_result_%A.txt
 # sciClone
 run_sciclone_facets:
-    job_name: run_sciclone_facets
-    output: outputs/run_sciclone_facets_%A.txt
     cpus: 5
 # pyclone
 pyclone_parse_tsv:
-    job_name: pcl_parse_tsv
-    output: outputs/pyclone_parse_tsv_%A.txt
     cpus: 5
 pyclone_setup_facets:
-    job_name: pcl_setup_facets
-    output: outputs/pyclone_setup_facets_%A.txt
     cpus: 5
 pyclone_setup_titan:
-    job_name: pcl_setup_titan
-    output: outputs/pyclone_setup_titan_%A.txt
     cpus: 5
 pyclone_setup_analysis:
-    job_name: pcl_setup_analysis
-    output: outputs/pyclone_setup_analysis_%A.txt
     cpus: 5
 pyclone_run_analysis:
-    job_name: pcl_run_analysis
-    output: outputs/pyclone_run_analysis_%A.txt
     partition: phi
     cpus: 5
 pyclone_build_cluster_table:
-    job_name: pcl_build_cluster_table
-    output: outputs/pyclone_build_cluster_table_%A.txt
     partition: phi
     cpus: 5
 pyclone_build_loci_table:
-    job_name: pcl_build_loci_table
-    output: outputs/pyclone_build_loci_table_%A.txt
     partition: phi
     cpus: 5
 pyclone_try_plot:
-    job_name: pcl_try_plot
-    output: outputs/pyclone_try_plot_%A.txt
     partition: phi
     cpus: 5
 pyclone_copy_results:
-    job_name: pyclone_copy_results
-    output: outputs/pyclone_copy_results_%A.txt
     partition: phi
     cpus: 5

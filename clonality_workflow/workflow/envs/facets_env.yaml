@@ -6,4 +6,4 @@ channels:
 dependencies:
   - r-facets
   - r-data.table
-prefix: /home/pkus/programs/anaconda3/envs/facets_env
+prefix: /home/pkus/programs/conda_envs/facets_env
