@@ -16,6 +16,7 @@ def get_cnvkit_info(patient):
     return(res)
 
 patient_cnvkit = {patient: get_cnvkit_info(patient) for patient in patients}
+access_file = "cnvkit/excludes." + config["genomeBuild"] + ".bed"
 
 
 rule cnvkit_all:
@@ -23,15 +24,25 @@ rule cnvkit_all:
         expand("cnvkit/{patient}/done", patient=patients)
 
 
+rule cnvkit_access:
+    input: config["genome_fa"]
+    output: access_file
+    conda: "../envs/cnvkit_env.yaml"
+    shell:
+        "cnvkit.py access {input} -o {output}"
+
+
 rule cnvkit_pipeline:
     input:
         normal = lambda wildcards: patient_cnvkit[wildcards.patient]["normal_bams"],
-        tumor = lambda wildcards: patient_cnvkit[wildcards.patient]["tumor_bams"]
+        tumor = lambda wildcards: patient_cnvkit[wildcards.patient]["tumor_bams"],
+        genome_excludes = access_file
     output:
         dir = directory("cnvkit/{patient}/"),
-        done = outdir + "/cnvkit/{patient}/done"
+        done = "cnvkit/{patient}/done"
     params:
-        targets = "resources/agilent_sureselect_v6/Agilent_SureSelect_v6r2_S07604514_Covered_hg38.cnvkit.bed",
+        targets = config["targets_bed"],
+        genome_fa = config["genome_fa"],
         cnn_ref = "cnvkit/{patient}/reference.cnn"
     conda: "../envs/cnvkit_env.yaml"
     threads: 10
@@ -41,8 +52,8 @@ rule cnvkit_pipeline:
         srun cnvkit.py batch {input.tumor} \\
             --normal {input.normal} \\
             --targets {params.targets} \\
-            --fasta ~/resources/hg38.fa \\
-            --access resources/access-excludes.hg38.bed \\
+            --fasta {params.genome_fa} \\
+            --access {input.genome_excludes} \\
             --output-reference {params.cnn_ref} \\
             --output-dir {output.dir} \\
             --diagram --scatter \\
