@@ -1,0 +1,12 @@
+name: clonalityParsers
+channels:
+  - conda-forge
+  - bioconda
+  - default
+dependencies:
+  - r-base
+  - r-tidyverse
+  - bioconductor-genomeinfodb
+  - bioconductor-plyranges
+  - r-vcfr
+  - r-optparse
