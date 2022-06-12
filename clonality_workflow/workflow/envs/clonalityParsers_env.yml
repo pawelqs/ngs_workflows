@@ -2,6 +2,7 @@ name: clonalityParsers
 channels:
   - conda-forge
   - bioconda
+  - r
   - default
 dependencies:
   - r-base
@@ -10,3 +11,5 @@ dependencies:
   - bioconductor-plyranges
   - r-vcfr
   - r-optparse
+  - r-remotes
+  - r-rlang
