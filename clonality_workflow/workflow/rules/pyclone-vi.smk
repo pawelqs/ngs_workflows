@@ -52,101 +52,17 @@ rule pyclone_parse_tsv:
         "../scripts/prepare_pyclone-vi_input.R"
 
 
-
-# def pyclone_write_samples_info(out_file, samples, tsv_files, purities):
-#     with open(out_file, 'a') as f:
-#         f.write(" ".join(samples) + "\n")
-#         f.write(" ".join(tsv_files) + "\n")
-#         f.write(" ".join([str(p) for p in purities]) + "\n")
-
-# def pyclone_get_facets_purity(facets_out):
-#     purity = pd.read_csv(facets_out).loc[1, "Purity"]
-#     if np.isnan(purity):
-#         purity = 1
-#         print("Purity NaN, set to 1")
-#     else:
-#         print("Purity: %f" % purity)
-#     return str(purity)
-
-# rule pyclone_setup_facets:
-#     input: 
-#         purity_files = lambda wildcards: ["facets/%s.csv" % sample 
-#             for sample in patients_pyclone[wildcards.patient]["tumor_samples"]],
-#         tsv_files = lambda wildcards: ["pyclone_facets/%s/input/%s.tsv" % (wildcards.patient, sample) 
-#             for sample in patients_pyclone[wildcards.patient]["tumor_samples"]]
-#     output: "pyclone_facets/{patient}/input/samples_info.txt"
-#     run:
-#         samples = patients_pyclone[wildcards.patient]["tumor_samples"]
-#         purities = [pyclone_get_facets_purity(str(facets_out)) for facets_out in input.purity_files]
-#         pyclone_write_samples_info(str(output), samples, input.tsv_files, purities)
+rule pyclone_fit:
+    input: "pyclone_{cnv_method}/{patient}.pyvi-input.tsv"
+    output: "pyclone_{cnv_method}/{patient}.h5"
+    conda: "../envs/pyclonevi_env.yml"
+    shell:
+        "pyclone-vi fit -i {input} -o {output} -c 40 -d beta-binomial -r 50"
 
 
-# def pyclone_get_titan_purity(params_file):
-#     params = open(params_file).read().split("\n")
-#     normal_cont_line = [line for line in params if "Normal contamination estimate" in line]
-#     normal_contamination = float(normal_cont_line[0].split("\t")[1])
-#     if normal_contamination > 0.9:
-#         purity = 1
-#         print("Estimated purity below 0.1, set to 1 as inaccurrate")
-#     else:
-#         purity = 1 - normal_contamination
-#         print("Purity: %f" % purity)
-#     return str(purity)
-
-# rule pyclone_setup_titan:
-#     input: 
-#         purity_files = lambda wildcards: ["titan_optimal/%s/%s.params.txt" % (sample, sample) 
-#             for sample in patients_pyclone[wildcards.patient]["tumor_samples"]],
-#         tsv_files = lambda wildcards: ["pyclone_titan/%s/input/%s.tsv" % (wildcards.patient, sample) 
-#             for sample in patients_pyclone[wildcards.patient]["tumor_samples"]]
-#     output: "pyclone_titan/{patient}/input/samples_info.txt"
-#     run:
-#         samples = patients_pyclone[wildcards.patient]["tumor_samples"]
-#         purities = [pyclone_get_titan_purity(str(pfile)) for pfile in input.purity_files]
-#         pyclone_write_samples_info(str(output), samples, input.tsv_files, purities)
-
-
-# rule pyclone_setup_analysis:
-#     input: "pyclone_{cnv_method}/{patient}/input/samples_info.txt"
-#     output: "pyclone_{cnv_method}/{patient}/config.yaml"
-#     conda: "../envs/pyclone_env.yml"
-#     shell: 
-#         """
-#         samples=`sed '1q;d' {input}`
-#         cnv=`sed '2q;d' {input}`
-#         purities=`sed '3q;d' {input}`
-        
-#         echo $samples
-#         echo $cnv
-#         echo $purities
-
-#         PyClone setup_analysis \\
-#             --samples $samples \\
-#             --in_files $cnv \\
-#             --tumour_contents $purities \\
-#             --working_dir results/pyclone_{wildcards.cnv_method}/{wildcards.patient}
-        
-#         sed -i 's/.nan/null/g' {output}
-#         """
-
-
-# rule pyclone_run_analysis:
-#     input: "pyclone_{cnv_method}/{patient}/config.yaml"
-#     output: "pyclone_{cnv_method}/{patient}/trace/labels.tsv.bz2"
-#     conda: "../envs/pyclone_env.yml"
-#     shell: "PyClone run_analysis --config_file {input} --seed 4"
-
-
-
-# rule pyclone_copy_results:
-#     input: 
-#         cluster_table = "pyclone_{cnv_method}/{patient}/table_loci.tsv",
-#         loci_table = "pyclone_{cnv_method}/{patient}/table_cluster.tsv"
-#     output: 
-#         cluster_table = "pyclone_{cnv_method}/{patient}.table_loci.tsv",
-#         loci_table = "pyclone_{cnv_method}/{patient}.table_cluster.tsv"
-#     shell: 
-#         """
-#         cp {input.cluster_table} {output.cluster_table}
-#         cp {input.loci_table} {output.loci_table} 
-#         """
+rule pyclone_write_results:
+    input: "pyclone_{cnv_method}/{patient}.h5"
+    output: "pyclone_{cnv_method}/{patient}.pyvi-output.tsv"
+    conda: "../envs/pyclonevi_env.yml"
+    shell:
+        "pyclone-vi write-results-file -i {input} -o {output}"

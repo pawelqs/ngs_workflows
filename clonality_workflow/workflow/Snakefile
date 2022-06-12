@@ -34,7 +34,7 @@ rule all:
         expand("{bam}.bai", bam=samples.bam.tolist()),
         # expand("cnvkit/{patient}/done", patient=patients_known_sex),
         expand("facets/{sample}.csv", sample=tumor_samples),
-        expand("pyclone_facets/{patient}.pyvi-input.tsv", patient=patients)
+        expand("pyclone_facets/{patient}.pyvi-output.tsv", patient=patients)
         # expand("titan_optimal/{sample}/{sample}.segs.tsv", sample=tumor_samples),
         # expand("phylowgs_{cnv_method}/{patient}.Rds", cnv_method=["titan", "facets"], patient = patients),
         # expand("pyclone_{cnv_method}/{patient}.table_{table}.tsv", cnv_method=["titan", "facets"], patient=patients, table=["cluster", "loci"]),
