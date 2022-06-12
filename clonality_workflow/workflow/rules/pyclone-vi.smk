@@ -54,7 +54,7 @@ rule pyclone_parse_tsv:
 
 rule pyclone_fit:
     input: "pyclone_{cnv_method}/{patient}.pyvi-input.tsv"
-    output: "pyclone_{cnv_method}/{patient}.h5"
+    output: temp("pyclone_{cnv_method}/{patient}.h5")
     conda: "../envs/pyclonevi_env.yml"
     shell:
         "pyclone-vi fit -i {input} -o {output} -c 40 -d beta-binomial -r 50"
