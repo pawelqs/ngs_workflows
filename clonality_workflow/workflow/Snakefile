@@ -18,7 +18,6 @@ y = samples[samples.sample_type == "normal"][["patient_id", "sample_id"]] \
 x = pd.merge(x, y, on = "patient_id")
 paired_normals = dict(zip(x.tumor_sample, x.normal_sample))
 
-print(samples)
 mutect_files = samples.loc[samples.mutect2 != ".", ["patient_id", "mutect2"]]
 mutect_files = dict(zip(mutect_files.patient_id, mutect_files.mutect2))
 
@@ -35,7 +34,7 @@ rule all:
         expand("{bam}.bai", bam=samples.bam.tolist()),
         # expand("cnvkit/{patient}/done", patient=patients_known_sex),
         expand("facets/{sample}.csv", sample=tumor_samples),
-        expand("pyclone_facets/{patient}/{patient}.pyvi-input.tsv", patient=patients)
+        expand("pyclone_facets/{patient}.pyvi-input.tsv", patient=patients)
         # expand("titan_optimal/{sample}/{sample}.segs.tsv", sample=tumor_samples),
         # expand("phylowgs_{cnv_method}/{patient}.Rds", cnv_method=["titan", "facets"], patient = patients),
         # expand("pyclone_{cnv_method}/{patient}.table_{table}.tsv", cnv_method=["titan", "facets"], patient=patients, table=["cluster", "loci"]),

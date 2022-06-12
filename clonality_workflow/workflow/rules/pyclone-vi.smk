@@ -31,25 +31,26 @@ def pyclone_get_cnv_files(method, patient):
     return files
 
 
+def get_patient_sex(patient):
+    sex = patients_pyclone[patient]["sex"]
+    if pd.isnull(sex):
+        return "unknown"
+    else:
+        return sex
+
+
 rule pyclone_parse_tsv:
     input:
         vcf = "filtered_vcf/{patient}.vcf",
         cnv = lambda wildcards: pyclone_get_cnv_files(wildcards.cnv_method, wildcards.patient)
-    output: "pyclone_{cnv_method}/{patient}/{patient}.pyvi-input.tsv"
+    output: "pyclone_{cnv_method}/{patient}.pyvi-input.tsv"
     params:
         sample_ids = lambda wildcards: patients_pyclone[wildcards.patient]["tumor_samples"],
-        sex = lambda wildcards: patients_pyclone[wildcards.patient]["sex"]
-    conda: "../envs/clonalityParsers_env.yml"
-    shell:
-        """
-        Rscript workflow/scripts/prepare_pyclone-vi_input.R \\
-            --vcf_file {input.vcf} \\
-            --cnv_files {input.cnv} \\
-            --sample_ids {params.sample_ids} \\
-            --sex {params.sex} \\
-            --out_file {output} \\
-            --filename 
-        """
+        sex = lambda wildcards: get_patient_sex(wildcards.patient)
+    conda: "clonalityParsers"
+    script:
+        "../scripts/prepare_pyclone-vi_input.R"
+
 
 
 # def pyclone_write_samples_info(out_file, samples, tsv_files, purities):
@@ -135,67 +136,6 @@ rule pyclone_parse_tsv:
 #     conda: "../envs/pyclone_env.yml"
 #     shell: "PyClone run_analysis --config_file {input} --seed 4"
 
-
-# rule pyclone_build_cluster_table:
-#     input: 
-#         config = "pyclone_{cnv_method}/{patient}/config.yaml",
-#         labels = "pyclone_{cnv_method}/{patient}/trace/labels.tsv.bz2"
-#     output: "pyclone_{cnv_method}/{patient}/table_cluster.tsv"
-#     conda: "../envs/pyclone_env.yml"
-#     shell: "PyClone build_table --config_file {input.config} --out_file {output} --table_type cluster"
-
-
-# rule pyclone_build_loci_table:
-#     input: 
-#         config = "pyclone_{cnv_method}/{patient}/config.yaml",
-#         labels = "pyclone_{cnv_method}/{patient}/trace/labels.tsv.bz2"
-#     output: "pyclone_{cnv_method}/{patient}/table_loci.tsv"
-#     conda: "../envs/pyclone_env.yml"
-#     shell: "PyClone build_table --config_file {input.config} --out_file {output} --table_type loci"
-
-
-# rule pyclone_try_plot:
-#     input: 
-#         config = "pyclone_{cnv_method}/{patient}/config.yaml",
-#         labels = "pyclone_{cnv_method}/{patient}/trace/labels.tsv.bz2"
-#     output: "pyclone_{cnv_method}/{patient}/tried.plot"
-#     params: 
-#         cluster_plots = pyclone_cluster_plots,
-#         loci_plots = pyclone_loci_plots
-#     conda: "../envs/pyclone_env.yml"
-#     shell: 
-#         """
-#         for plot in {params.cluster_plots}
-#         do
-#             out_file=results/pyclone_{wildcards.cnv_method}/{wildcards.patient}/clusters_$plot.png
-#             PyClone plot_clusters --config_file {input.config} --plot_file $out_file --plot_type $plot || echo 'clusters_$plot'
-#         done
-
-#         for plot in {params.loci_plots}
-#         do
-#             out_file=results/pyclone_{wildcards.cnv_method}/{wildcards.patient}/loci_$plot.png
-#             PyClone plot_loci --config_file {input.config} --plot_file $out_file --plot_type $plot || echo 'clusters_$plot'
-#         done
-#         touch {output}
-#         """
-
-
-# # rule pyclone_plot_clusters:
-# #     input: 
-# #         config = "pyclone_{cnv_method}/{patient}/config.yaml",
-# #         labels = "pyclone_{cnv_method}/{patient}/trace/labels.tsv.bz2"
-# #     output: "pyclone_{cnv_method}/{patient}/clusters_{plot_type}.png"
-# #     conda: "../envs/pyclone_env.yml"
-# #     shell: "PyClone plot_clusters --config_file {input.config} --plot_file {output} --plot_type {wildcards.plot_type}"
-
-
-# # rule pyclone_plot_loci:
-# #     input: 
-# #         config = "pyclone_{cnv_method}/{patient}/config.yaml",
-# #         labels = "pyclone_{cnv_method}/{patient}/trace/labels.tsv.bz2"
-# #     output: "pyclone_{cnv_method}/{patient}/loci_{plot_type}.png"
-# #     conda: "../envs/pyclone_env.yml"
-# #     shell: "PyClone plot_loci --config_file {input.config} --plot_file {output} --plot_type {wildcards.plot_type}"
 
 
 # rule pyclone_copy_results:
