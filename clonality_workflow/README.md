@@ -1,6 +1,6 @@
 # Snakemake workflow for clonality analysis of WES data
 
-The snakemake is created to easily be run on computing clusters with SLURM. For `qsub` `run_cnv_workflow.sh` will need to be adjusted.
+The snakemake is created to easily be run on computing clusters with SLURM.
 
 **File under construction**
 
