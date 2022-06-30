@@ -3,6 +3,7 @@ channels:
   - conda-forge
   - bioconda
   - r
+  # - kpawel125
   - default
 dependencies:
   - r-base
@@ -13,3 +14,4 @@ dependencies:
   - r-optparse
   - r-remotes
   - r-rlang
+  # - r-clonalityparsers
