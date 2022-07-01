@@ -1,0 +1,7 @@
+---
+name: clonality
+workdir: /scratch/scratch-hdd/pkus/workflows_results/battenberg/test
+manifest: /scratch/scratch-hdd/pkus/data/MK_OPUS_WES/manifest.tsv
+
+genomeBuild: "hg38"
+...

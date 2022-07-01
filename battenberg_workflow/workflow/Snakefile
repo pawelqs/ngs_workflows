@@ -1,0 +1,58 @@
+import pandas as pd
+import glob
+
+workdir: config["workdir"]
+
+samples = pd.read_csv(config["manifest"], sep = "\t")
+patients = samples.patient_id.unique().tolist()
+patients_known_sex = samples.dropna().patient_id.unique().tolist()
+
+sex = dict(zip(samples.sample_id, samples.sex))
+bams = dict(zip(samples.sample_id, samples.bam))
+tumor_samples = samples[samples.sample_type == "tumor"].sample_id.tolist()
+
+x = samples[samples.sample_type == "tumor"][["patient_id", "sample_id"]] \
+    .rename(columns={"sample_id": "tumor_sample"})
+y = samples[samples.sample_type == "normal"][["patient_id", "sample_id"]] \
+    .rename(columns={"sample_id": "normal_sample"})
+x = pd.merge(x, y, on = "patient_id")
+paired_normals = dict(zip(x.tumor_sample, x.normal_sample))
+
+
+
+rule all:
+    input:
+        expand("{bam}.bai", bam=samples.bam.tolist()),
+        expand("battenberg/G32.txt")
+        # expand("battenberg/{patient}.txt", patient=patients)
+
+
+rule index_bam:
+    input: "{file}.bam"
+    output: "{file}.bam.bai"
+    shell: "samtools index {input}"
+
+
+rule battenberg:
+    input:
+        nb = "/home/pkus/battenberg_test/bams/G32_C.small.bam",
+        # tb = [
+        #     "/home/pkus/temp/battenberg_test/bams/G32_P1.small.bam",
+        #     "/home/pkus/temp/battenberg_test/bams/G32_L1.small.bam"
+        # ],
+        tb = "/home/pkus/battenberg_test/bams/G32_L1.small.bam"
+    params:
+        normalname = "G32_C",
+        # tumourname = ["G32_P1", "G32_L1"],
+        tumourname = "G32_L1",
+        sex = "female",
+        output = "results",
+        skip_allelecount = False,
+        skip_preprocessing = False,
+        skip_phasing = False,
+        cpu = 8,
+        bp = None
+    output: "battenberg/G32.txt"
+    singularity: "/home/pkus/containers/battenberg.sif"
+    script:
+        "run_battenberg.R"

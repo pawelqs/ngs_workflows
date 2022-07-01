@@ -1,0 +1,23 @@
+---
+jobs: 100
+cluster:
+  mkdir -p slurm_logs/{rule} &&
+  sbatch 
+    --account=007
+    --time={resources.time}
+    --mem={resources.mem}
+    --cpus-per-task={resources.cpus}
+    --output=slurm_logs/{rule}/{wildcards}.out
+    --error=slurm_logs/{rule}/{wildcards}.err
+    --job-name={rule}_{wildcards}
+    --partition=phi
+    --nodelist=wn136
+default-resources: 
+  - cpus=1
+  - mem="10G"
+  - time="200:0:0"
+  - partition="phi"
+use-conda: true
+conda-frontend: conda
+keep-going: true
+...
