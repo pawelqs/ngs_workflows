@@ -1,3 +1,4 @@
+
 rule facets_all:
     input: expand("facets/{sample}.csv", sample=tumor_samples)
 
