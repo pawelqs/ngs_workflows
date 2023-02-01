@@ -13,5 +13,5 @@ rule guess_gender:
     output: "bcftools/{patient}.sex"
     shell: 		
         """
-        bcftools +guess-ploidy -t GT {input} > {output}
+        bcftools +guess-ploidy -e 0.1 -t GT {input} > {output}
         """
