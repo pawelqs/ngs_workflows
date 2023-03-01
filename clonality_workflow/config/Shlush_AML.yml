@@ -1,0 +1,7 @@
+---
+name: clonality
+workdir: /scratch/scratch-hdd/pkus/workflows_results/clonality/Shlush_AML
+manifest: /home/pkus/ngs_workflows/clonality_workflow/manifests/Shlush_AML.tsv
+
+genomeBuild: "hg19"
+...

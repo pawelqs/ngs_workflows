@@ -32,6 +32,8 @@ Open screen session and run
 ```
 conda activate snakemake
 snakemake --profile config/hpc_slurm_profile --configfile config/config.yml
+# or
+snakemake --profile config/hpc_slurm_profile --configfiles config/config.hg19.yml config/Shlush_AML.yml
 ```
 
 ## Limitations
