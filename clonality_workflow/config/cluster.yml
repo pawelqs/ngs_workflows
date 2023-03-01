@@ -51,6 +51,9 @@ copyOptSolution:
 titan_clear_segfile:
     cpus: 5
     partition: phi
+# ASCA sc
+run_ascat_sc:
+    cpus: 8
 # phyloWGS
 prepare_avcf:
     cpus: 5

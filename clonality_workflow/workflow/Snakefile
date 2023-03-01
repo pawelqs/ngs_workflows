@@ -26,16 +26,18 @@ include: "rules/misc.smk"
 include: "rules/cnvkit.smk"
 include: "rules/titancna.smk"
 include: "rules/facets.smk"
+include: "rules/ascat_sc.smk"
 include: "rules/phylowgs.smk"
 include: "rules/pyclone-vi.smk"
 
 
 rule all:
     input:
-        # expand("{bam}.bai", bam=samples.bam.tolist()),
-        # expand("bcftools/{patient}.sex", patient=patients),
+        expand("{bam}.bai", bam=samples.bam.tolist()),
+        # expand("bcftools/{patient}.sex", patient=patients)
         # expand("cnvkit/{patient}/done", patient=patients_known_sex),
         # expand("facets/{sample}.csv", sample=tumor_samples),
+        expand("ASCAT_sc/{patient}.Rda", patient=patients)[1]
         # expand("pyclone_facets/{patient}.pyvi-output.tsv", patient=patients)
         # expand("titan_optimal/{sample}/{sample}.segs.tsv", sample=tumor_samples),
         # expand("phylowgs_{cnv_method}/{patient}.Rds", cnv_method=["titan", "facets"], patient = patients),
