@@ -8,6 +8,7 @@ dependencies:
   - bioconductor-genomicranges
   - bioconductor-biostrings
   - bioconductor-dnacopy
+  - bioconductor-copynumber
   - bioconductor-rsamtools
   - bioconductor-minfi
   - bioconductor-conumee

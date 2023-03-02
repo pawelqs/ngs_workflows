@@ -30,7 +30,7 @@ rule run_ascat_sc:
         rda = "ASCAT_sc/{patient}.Rda"
     params:
         genome_fa = config["genome_fa"],
-        workdir = "ASCAT_sc/",
+        workdir = "ASCAT_sc/{patient}",
         genome = config["genomeBuild"], # either hg19 or hg38 so far
         projectname = "{patient}",
         multipcf = True,
