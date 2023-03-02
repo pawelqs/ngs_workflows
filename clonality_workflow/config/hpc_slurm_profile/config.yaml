@@ -6,16 +6,20 @@ cluster:
     --account=007
     --time={resources.time}
     --mem={resources.mem}
-    --cpus-per-task={resources.cpus}
+    --cpus-per-task={threads}
     --output=slurm_logs/{rule}/{wildcards}.out
     --error=slurm_logs/{rule}/{wildcards}.err
     --job-name={rule}_{wildcards}
     --partition={resources.partition}
+set-threads:
+  - run_ascat_sc=12
+set-resources:
+  - run_ascat_sc:cpus=12
 default-resources: 
   - cpus=1
   - mem="10G"
   - time="200:0:0"
-  - partition="ibm_large"
+  - partition="k40"
 use-conda: true
 conda-frontend: conda
 keep-going: true
