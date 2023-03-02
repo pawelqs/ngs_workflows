@@ -30,4 +30,4 @@ res <- run_sc_sequencing(
     multipcf = multipcf                     ## lgl use multipcf for multi-track segmentation if multi-sample sequencing
 )
 
-save(res, file = output)
+saveRDS(res, file = output)

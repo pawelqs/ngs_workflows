@@ -1,6 +1,6 @@
 
 rule ascat_sc_all:
-    input: expand("ASCAT_sc/{patient}.Rda", patient=patients)
+    input: expand("ASCAT_sc/{patient}.Rds", patient=patients)
 
 def get_ascat_sc_info(patient):
     patient_samples = samples[samples.patient_id == patient]
@@ -27,7 +27,7 @@ rule run_ascat_sc:
     input:
         bams = lambda wildcards: patient_ascat_sc[wildcards.patient]["all_bams"],
     output:
-        rda = "ASCAT_sc/{patient}.Rda"
+        rda = "ASCAT_sc/{patient}.Rds"
     params:
         genome_fa = config["genome_fa"],
         workdir = "ASCAT_sc/{patient}",
