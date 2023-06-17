@@ -1,0 +1,36 @@
+---
+jobs: 100
+cluster:
+  mkdir -p slurm_logs/{rule} &&
+  sbatch 
+    --account=007
+    --time={resources.time}
+    --mem={resources.mem}
+    --cpus-per-task={threads}
+    --output=slurm_logs/{rule}/{wildcards}.out
+    --error=slurm_logs/{rule}/{wildcards}.err
+    --job-name={rule}_{wildcards}
+    --partition={resources.partition}
+set-threads:
+  - fastqc_1=20
+  - fastqc_2=20
+  - fastqc_3=20
+  - fastq_screen_1=10
+  - star=12
+  - get_counts_all=10
+set-resources:
+  - fastqc_1:cpus=20
+  - fastqc_2:cpus=20
+  - fastqc_3:cpus=20
+  - fastq_screen_1:cpus=10
+  - star:cpus=12
+  - get_counts_all:cpus=10
+default-resources: 
+  - cpus=1
+  - mem="10G"
+  - time="200:0:0"
+  - partition="k40"
+use-conda: true
+conda-frontend: conda
+keep-going: true
+...
