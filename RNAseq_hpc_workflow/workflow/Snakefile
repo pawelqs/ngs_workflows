@@ -3,13 +3,15 @@ import os
 
 configfile: "config/config.yml"
 
+workdir: config["workdir"]
+
 
 os.makedirs("fastq", exist_ok = True)
 os.makedirs("qc/fastq", exist_ok = True)
 os.makedirs("qc/trimmed", exist_ok = True)
 os.makedirs("qc/bam", exist_ok = True)
 
-samples = pd.read_csv("samples.tsv", sep = "\t", comment = "#")
+samples = pd.read_csv(config["manifest"], sep = "\t", comment = "#")
 samples["filename"] = samples.library_name + "_" + samples.read_file
 
 fastq_files = dict(zip(samples.filename, samples.fastq_gz))
@@ -175,7 +177,8 @@ rule fastqc_3:
 rule read_GC_py:
     input: "bams/{library}.bam"
     output: "qc/bam/{library}.read_GC.GC.xls"
-    conda: "envs/rseqc_env.yaml"
+    # conda: "envs/rseqc_env.yaml"
+    conda: "rseqc_env"
     shell: "read_GC.py -i {input} -o qc/bam/{wildcards.library}.read_GC"
 
 
@@ -187,7 +190,8 @@ rule tin_py:
     output:
         # xls = "qc/bam/{library}.tin.xls",
         summary = "qc/bam/{library}.tin.txt"
-    conda: "envs/rseqc_env.yaml"
+    # conda: "envs/rseqc_env.yaml"
+    conda: "rseqc_env"
     shell:
         """
             cd qc/bam
@@ -202,7 +206,8 @@ rule inner_distance_py:
         bam = "bams/{library}.bam",
         ref_bed = config["rseqc_ref"]
     output: ["qc/bam/{library}.inner_distance_freq.txt", "qc/bam/{library}.inner_distance.txt"]
-    conda: "envs/rseqc_env.yaml"
+    # conda: "envs/rseqc_env.yaml"
+    conda: "rseqc_env"
     shell: "inner_distance.py -i {input.bam} -r {input.ref_bed} -o qc/bam/{wildcards.library}"
 
 
@@ -211,7 +216,8 @@ rule genebody_coverage_py:
         bam = "bams/{library}.bam",
         ref_bed = config["rseqc_ref"]
     output: "qc/bam/{library}.geneBodyCoverage.txt"
-    conda: "envs/rseqc_env.yaml"
+    # conda: "envs/rseqc_env.yaml"
+    conda: "rseqc_env"
     shell: "geneBody_coverage.py -i {input.bam} -r {input.ref_bed} -o qc/bam/{wildcards.library}"
 
 
@@ -220,7 +226,8 @@ rule read_distribution_py:
         bam = "bams/{library}.bam",
         ref_bed = config["rseqc_ref"]
     output: "qc/bam/{library}.read_distribution.txt"
-    conda: "envs/rseqc_env.yaml"
+    # conda: "envs/rseqc_env.yaml"
+    conda: "rseqc_env"
     shell: "read_distribution.py -i {input.bam} -r {input.ref_bed} > qc/bam/{wildcards.library}.read_distribution.txt"
 
 
