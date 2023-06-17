@@ -1,6 +1,10 @@
 ---
 name: rnaseq_smk
 
+manifest: /scratch/scratch-hdd/pkus/data/AT_Bst2_RNAseq_2023/samples.tsv
+workdir: /scratch/scratch-hdd/pkus/workflows_results/rnaseq_workflow/AT_Bst2_RNAseq_2023
+
+
 # mm28 - 149 (BCM)
 genome_fasta:    /scratch/scratch-hdd/pkus/resources/rnaseq_files/gencode_mm_28/GRCm39.primary_assembly.genome.fa
 rseqc_ref:       /scratch/scratch-hdd/pkus/resources/rnaseq_files/gencode_mm_28/mm28_RefSeq.bed

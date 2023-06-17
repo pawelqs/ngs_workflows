@@ -1,21 +1,22 @@
 __default__:
-    partition: extuser
+    partition: ibm_large
 index_bam:
-    partition: phi
+    partition: ibm_large
 filter_avcf:
     cpus: 5
 # CNVkit
 cnvkit_access:
     cpus: 1
 cnvkit_pipeline:
-    partition: phi
+    partition: ibm_large
     cpus: 10
 # FACETS
 snp_pile:
     cpus: 5
+    partition: ibm_large
 facets:
     cpus: 5
-    partition: phi
+    partition: ibm_large
 # TitanCNA
 correct_depth:
     cpus: 5
@@ -50,6 +51,9 @@ copyOptSolution:
 titan_clear_segfile:
     cpus: 5
     partition: phi
+# ASCA sc
+run_ascat_sc:
+    cpus: 8
 # phyloWGS
 prepare_avcf:
     cpus: 5

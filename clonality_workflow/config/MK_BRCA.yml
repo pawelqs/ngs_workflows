@@ -1,0 +1,8 @@
+---
+name: clonality
+workdir: /scratch/scratch-hdd/pkus/workflows_results/clonality/MK_BRCA
+manifest: /home/pkus/ngs_workflows/clonality_workflow/manifests/MK_BRCA.tsv
+
+genomeBuild: "hg38"
+chrstring: "chr"
+...

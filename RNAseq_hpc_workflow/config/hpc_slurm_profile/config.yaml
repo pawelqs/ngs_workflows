@@ -12,11 +12,19 @@ cluster:
     --job-name={rule}_{wildcards}
     --partition={resources.partition}
 set-threads:
-  - run_ascat_sc=12
+  - fastqc_1=20
+  - fastqc_2=20
+  - fastqc_3=20
+  - fastq_screen_1=10
+  - star=12
+  - get_counts_all=10
 set-resources:
-  - run_ascat_sc:cpus=12
-  - snp_pile:cpus=5
-  - facets:cpus=5
+  - fastqc_1:cpus=20
+  - fastqc_2:cpus=20
+  - fastqc_3:cpus=20
+  - fastq_screen_1:cpus=10
+  - star:cpus=12
+  - get_counts_all:cpus=10
 default-resources: 
   - cpus=1
   - mem="10G"

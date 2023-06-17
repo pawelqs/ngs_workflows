@@ -1,9 +1,5 @@
 ---
-name: clonality
-workdir: /scratch/scratch-hdd/pkus/workflows_results/clonality/MK_OPUS_WES
-manifest: /scratch/scratch-hdd/pkus/data/MK_OPUS_WES/manifest.tsv
-
-genomeBuild: "hg38"
+genomeBuild: "hg19"
 
 ## path to tools
 samTools:  samtools
@@ -14,16 +10,16 @@ bcfTools:  bcftools
 ############################ CNVkit
 #####################################################
 
-genome_fa: /scratch/scratch-hdd/pkus/resources/hg38.fa
+genome_fa: /scratch/scratch-hdd/pkus/resources/hg19.fa # does not exist yet
 # targets_bed: /scratch/scratch-hdd/pkus/resources/agilent/Agilent_SureSelect_v6r2_S07604514_Covered_hg38.cnvkit.bed
-targets_bed: /scratch/scratch-hdd/pkus/resources/agilent/Agilent_SureSelect_v6r2_S07604514_Covered_hg38.bed
+targets_bed: /scratch/scratch-hdd/pkus/resources/agilent/Agilent_SureSelect_v6r2_S07604514_Covered_hg19.bed # does not exist yet
 
 
 #####################################################
 ############################ FACETS
 #####################################################
 
-FACETS_snp_vcf: "/scratch/scratch-hdd/pkus/resources/FACETS/hg38/00-common_all.chr.vcf.gz"
+FACETS_snp_vcf: "/scratch/scratch-hdd/pkus/resources/FACETS/hg19/00-common_all.chr.vcf.gz"
 
 #####################################################
 ############################ ASCAT
@@ -107,5 +103,4 @@ TitanCNA_numCores: 1
 
 ## Combine TitanCNA & ichorCNA
 mergeIchorHOMD: FALSE  # consider setting to TRUE when working with pure tumor
-
 ...

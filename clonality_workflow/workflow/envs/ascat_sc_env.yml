@@ -1,0 +1,17 @@
+name: ascat_sc
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - r-base
+  - bioconductor-genomicranges
+  - bioconductor-biostrings
+  - bioconductor-dnacopy
+  - bioconductor-copynumber
+  - bioconductor-rsamtools
+  - bioconductor-minfi
+  - bioconductor-conumee
+  - r-xgboost
+  - r-devtools
+# devtools::install_github("VanLoo-lab/ASCAT.sc", build_opts = c("--no-build-vignettes"))
