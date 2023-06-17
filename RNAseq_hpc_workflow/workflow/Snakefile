@@ -68,6 +68,7 @@ rule multiqc_1:
     output: "qc/fastq.multiqc_report.html"
     params:
         dir = "qc/fastq_multiqc"
+    conda: "envs/multiqc_env.yaml"
     shell:
         """
         mkdir -p {params.dir}
@@ -116,6 +117,7 @@ rule multiqc_2:
     output: "qc/trimmed.multiqc_report.html"
     params:
         dir = "qc/trimmed_multiqc"
+    conda: "envs/multiqc_env.yaml"
     shell:
         """
         mkdir -p {params.dir}
@@ -244,7 +246,7 @@ rule multiqc_3:
         star = expand("bams/{library}/Log.final.out", library=lib_names),
         fastqc = expand("qc/bam/{library}_{file}", library=lib_names, file=["fastqc.html", "fastqc.zip"]),
         read_GC = expand("qc/bam/{library}.read_GC.GC.xls", library=lib_names),
-        tin_py = expand("qc/bam/{library}.tin.txt", library=lib_names),
+        # tin_py = expand("qc/bam/{library}.tin.txt", library=lib_names),
         inner_distance = expand("qc/bam/{library}.inner_distance.txt", library=lib_names),
         geneBody_coverage = expand("qc/bam/{library}.geneBodyCoverage.txt", library=lib_names),
         read_distribution = expand("qc/bam/{library}.read_distribution.txt", library=lib_names),
@@ -252,6 +254,7 @@ rule multiqc_3:
     output: "qc/bam.multiqc_report.html"
     params:
         dir = "qc/bam_multiqc"
+    conda: "envs/multiqc_env.yaml"
     shell:
         """
         mkdir -p {params.dir}
