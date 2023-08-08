@@ -29,7 +29,7 @@ default-resources:
   - cpus=1
   - mem="10G"
   - time="200:0:0"
-  - partition="k40"
+  - partition="phi"
 use-conda: true
 conda-frontend: conda
 keep-going: true
