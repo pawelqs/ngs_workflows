@@ -2,6 +2,7 @@
 name: clonality
 workdir: /scratch/scratch-hdd/pkus/workflows_results/clonality/MK_BRCA
 manifest: /home/pkus/ngs_workflows/clonality_workflow/manifests/MK_BRCA.tsv
+tools: "ascat"
 
 genomeBuild: "hg38"
 chrstring: "chr"

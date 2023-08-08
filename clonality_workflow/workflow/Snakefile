@@ -35,7 +35,7 @@ include: "rules/titancna.smk"
 rule all:
     input:
         expand("{bam}.bai", bam=samples.bam.tolist()),
-        # expand("ascat/{sample}.done", sample=tumor_samples[2])
+        expand("ascat/{sample}.done", sample=tumor_samples) if "ascat" in config["tools"] else [] 
         # expand("bcftools/{patient}.sex", patient=patients)
         # expand("cnvkit/{patient}/done", patient=patients_known_sex),
         # expand("facets/{sample}.csv", sample=tumor_samples)
@@ -50,6 +50,7 @@ rule all:
 rule index_bam:
     input: "{file}.bam"
     output: "{file}.bam.bai"
+    conda: "envs/samtools_env.yml"
     shell: "samtools index {input}"
 
 

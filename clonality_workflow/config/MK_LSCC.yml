@@ -2,7 +2,15 @@
 name: clonality
 workdir: /scratch/scratch-hdd/pkus/workflows_results/clonality/MK_LSCC
 manifest: /home/pkus/ngs_workflows/clonality_workflow/manifests/MK_LSCC.tsv
+tools: "ascat"
 
 genomeBuild: "hg38"
 chrstring: "chr"
+
+allelecounter_path: "alleleCounter"
+ascat_allele_prefix: "/scratch/scratch-hdd/pkus/resources/ASCAT/hg38_chr/alleles/G1000_alleles_hg38_chr"
+ascat_loci_prefix:  "/scratch/scratch-hdd/pkus/resources/ASCAT/hg38_chr/loci/G1000_loci_hg38_chr"
+ascat_gc_file:  /scratch/scratch-hdd/pkus/resources/ASCAT/hg38_chr/GC/GC_G1000_hg38.txt
+ascat_rt_file:  /scratch/scratch-hdd/pkus/resources/ASCAT/hg38_chr/RT/RT_G1000_hg38.txt
+targets_bed: /scratch/scratch-hdd/pkus/resources/agilent/Agilent_SureSelect_v6r2_S07604514_Covered_hg38.bed
 ...
