@@ -157,6 +157,8 @@ rule star:
         ln bams/{wildcards.library}/Aligned.sortedByCoord.out.bam bams/{wildcards.library}.bam
         samtools quickcheck {output.bam}
         """
+
+# --outFilterScoreMinOverLread 0.3 --outFilterMatchNminOverLread 0.3 \\ # this option can increase mappability
 # --outReadsUnmapped Fastx to keep them in BAM, e.g. if going to keep only BAMs
 
 
