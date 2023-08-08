@@ -12,7 +12,6 @@ bcfTools:  bcftools
 
 genome_fa: /scratch/scratch-hdd/pkus/resources/hg19.fa # does not exist yet
 # targets_bed: /scratch/scratch-hdd/pkus/resources/agilent/Agilent_SureSelect_v6r2_S07604514_Covered_hg38.cnvkit.bed
-targets_bed: /scratch/scratch-hdd/pkus/resources/agilent/Agilent_SureSelect_v6r2_S07604514_Covered_hg19.bed # does not exist yet
 
 
 #####################################################

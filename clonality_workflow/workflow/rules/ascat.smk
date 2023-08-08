@@ -24,7 +24,7 @@ rule run_ascat:
     params:
         tumor_name = "{sample_id}",
         normal_name = lambda wildcards: paired_normals[wildcards.sample_id],
-        # BED_file = "/scratch/scratch-hdd/pkus/resources/agilent/Agilent_SureSelect_v6r2_S07604514_Covered_hg38.bed",
+        BED_file = config["targets_bed"] if "targets_bed" in config else None,
         allelecounter_path = config["allelecounter_path"],
         allele_prefix = config["ascat_allele_prefix"],
         loci_prefix = config["ascat_loci_prefix"],

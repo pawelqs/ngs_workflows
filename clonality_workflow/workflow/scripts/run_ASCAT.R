@@ -28,6 +28,9 @@ normalLogR_file = paste0(ascat_dir, "preproc/", normal_name, ".LogRgermline_LogR
 normalBAF_file = paste0(ascat_dir, "preproc/", normal_name, ".germline_LogR.txt")
 
 
+print(BED_file)
+
+
 #prepare from BAM files
 ascat.prepareHTS(
   tumourseqfile = tumor_bam,
@@ -40,7 +43,7 @@ ascat.prepareHTS(
   gender = gender,
   genomeVersion = genome_version,
   nthreads = nthreads,
-  # bed_file_arg = ,
+  BED_file = if (!is.null(BED_file)) BED_file else NA,
   # chrom_names = c('21', '22'),
   tumourLogR_file = tumourLogR_file,
   tumourBAF_file = tumourBAF_file,

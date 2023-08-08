@@ -41,7 +41,7 @@ rule cnvkit_pipeline:
         dir = directory("cnvkit/{patient}/"),
         done = "cnvkit/{patient}/done"
     params:
-        targets = config["targets_bed"],
+        targets = config["targets_bed"] if "targets_bed" in config else None,
         genome_fa = config["genome_fa"],
         cnn_ref = "cnvkit/{patient}/reference.cnn"
     conda: "../envs/cnvkit_env.yaml"
