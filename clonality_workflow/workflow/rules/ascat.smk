@@ -19,7 +19,9 @@ ascat_genders = {
 rule run_ascat:
     input: 
         tumor_bam = lambda wildcards: bams[wildcards.sample_id],
-        normal_bam = lambda wildcards: bams[paired_normals[wildcards.sample_id]]
+        tumor_bai = lambda wildcards: bams[wildcards.sample_id] + ".bai",
+        normal_bam = lambda wildcards: bams[paired_normals[wildcards.sample_id]],
+        normal_ba= lambda wildcards: bams[paired_normals[wildcards.sample_id]] + ".bai"
     output: "ascat/{sample_id}.done"
     params:
         tumor_name = "{sample_id}",
