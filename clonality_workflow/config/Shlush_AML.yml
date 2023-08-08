@@ -5,4 +5,10 @@ manifest: /home/pkus/ngs_workflows/clonality_workflow/manifests/Shlush_AML.tsv
 
 genomeBuild: "hg19"
 chrstring: "chr"
+
+allelecounter_path: "alleleCounter"
+ascat_allele_prefix: "/scratch/scratch-hdd/pkus/resources/ASCAT/hg19_chr/alleles/G1000_alleles_hg19_chr"
+ascat_loci_prefix:  "/scratch/scratch-hdd/pkus/resources/ASCAT/hg19_chr/loci/G1000_loci_hg19_chr"
+ascat_gc_file:  /scratch/scratch-hdd/pkus/resources/ASCAT/hg19_chr/GC/GC_G1000_hg19.txt
+ascat_rt_file:  /scratch/scratch-hdd/pkus/resources/ASCAT/hg19_chr/RT/RT_G1000_hg19.txt
 ...
